@@ -1,0 +1,216 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import InfoCard from '../components/InfoCard.astro';
+import TeamCard from '../components/TeamCard.astro';
+
+const infoItems = [
+  { icon: '📍', label: '实践地点', value: '云南省普洱市澜沧拉祜族自治县' },
+  { icon: '📅', label: '实践时间', value: '2026年7月27日 — 8月7日 · 共12天' },
+  { icon: '👥', label: '实践团队', value: '北科大"酉良和音滇韵"实践团 · 7名成员' },
+  { icon: '🎵', label: '实践内容', value: '音乐基础教学 + 合唱排练 + 民族文化交融' },
+];
+
+const teamMembers = [
+  { name: '雷梓宸', role: '队长 · 统筹安排 · 审核' },
+  { name: '杜雅芬', role: '文字撰写 · 排版 · 教学' },
+  { name: '郭辉', role: '内容审核 · 质量把关' },
+  { name: '李昭琰', role: '技术支撑 · 摄影摄像 · 网页开发' },
+  { name: '邓剑', role: '教学组 · 教授《保卫黄河》' },
+  { name: '巴宗胜', role: '教学组 · 教授《有我》' },
+  { name: '曾嘉', role: '教学组 · 藏族民歌教学' },
+  { name: '张尧', role: '教学组 · 蒙古族民歌教学' },
+];
+---
+
+<BaseLayout title="首页" description="北京科技大学'酉良和音滇韵'实践团赴云南澜沧音乐支教成果展示">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <p class="hero-eyebrow">北京科技大学 · 酉良实践团</p>
+      <h1 class="hero-title">和音滇韵</h1>
+      <p class="hero-subtitle">以音乐为桥，连接京滇山海。十二个日夜，我们在澜沧江畔，用旋律点亮童心，用和声共鸣民族情谊。</p>
+    </div>
+    <div class="hero-image">
+      <div class="hero-placeholder">
+        <span class="placeholder-icon">🎵</span>
+        <span class="placeholder-text">团队合影 / 实践照片</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overview Section -->
+  <section class="section overview">
+    <div class="container">
+      <h2 class="section-title">实践概况</h2>
+      <div class="info-grid">
+        {infoItems.map((item) => (
+          <InfoCard icon={item.icon} label={item.label} value={item.value} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="section about">
+    <div class="container">
+      <h2 class="section-title">关于这次实践</h2>
+      <div class="about-text">
+        <p>2026 年盛夏，我们——北科大"酉良和音滇韵"实践团的 7 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 12 天的音乐支教活动。</p>
+        <p>澜沧，这座西南边陲的小城，毗邻缅甸，山高水远。这里的孩子许多是留守儿童，他们纯真的眼睛里藏着对音乐的渴望，却少有接触正规音乐教育的机会。</p>
+        <p>我们以"情暖童心"公益托管班为平台，从最基础的简谱、节奏教起，带着孩子们学习发声方法，排练合唱曲目——《萱草花》的温柔、《大鱼》的辽阔、《如愿》的深情、《保卫黄河》的豪迈。我们还融入了多民族音乐元素，让音乐成为民族文化交融的桥梁。</p>
+        <p>12 天很短，但音乐播下的种子会生根发芽。我们用镜头和文字记录下这段旅程，愿你在这里看见我们的故事。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="section team">
+    <div class="container">
+      <h2 class="section-title">团队成员</h2>
+      <div class="team-grid">
+        {teamMembers.map((member) => (
+          <TeamCard name={member.name} role={member.role} />
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ===== Hero ===== */
+  .hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 64px;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 80px 24px 64px;
+    min-height: calc(100vh - var(--nav-height) - 80px);
+  }
+
+  .hero-content {
+    flex: 1;
+    max-width: 520px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: 0.06em;
+    line-height: 1.15;
+    margin-bottom: 24px;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+    line-height: 1.8;
+  }
+
+  .hero-image {
+    flex: 1;
+    max-width: 520px;
+  }
+
+  .hero-placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, var(--color-bg-white), var(--color-bg));
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .placeholder-icon {
+    font-size: 2.5rem;
+    opacity: 0.5;
+  }
+
+  .placeholder-text {
+    font-size: 0.9rem;
+  }
+
+  /* ===== Info Grid ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* ===== About ===== */
+  .about {
+    background: var(--color-bg-white);
+  }
+
+  .about-text {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .about-text p {
+    font-size: 1.05rem;
+    color: var(--color-text-light);
+    line-height: 2;
+    margin-bottom: 20px;
+    text-indent: 2em;
+  }
+
+  .about-text p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ===== Team ===== */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .hero {
+      flex-direction: column;
+      gap: 40px;
+      padding: 60px 24px 40px;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .team-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero-title {
+      font-size: 2.2rem;
+    }
+
+    .team-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

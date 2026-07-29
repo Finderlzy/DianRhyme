@@ -1,0 +1,106 @@
+---
+const currentPath = Astro.url.pathname;
+
+const links = [
+  { href: '/', label: '首页' },
+  { href: '/diary', label: '实践日记' },
+  { href: '/gallery', label: '图片视频' },
+];
+---
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="logo">和音滇韵</a>
+    <ul class="nav-links">
+      {links.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class={currentPath === link.href ? 'active' : ''}
+          >
+            {link.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    z-index: 100;
+    background: rgba(255, 254, 251, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .navbar.scrolled {
+    background: rgba(255, 254, 251, 0.98);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .navbar-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: 0.05em;
+  }
+
+  .logo:hover {
+    color: var(--color-primary);
+  }
+
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-links a {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    color: var(--color-text-light);
+    transition: all 0.2s ease;
+  }
+
+  .nav-links a:hover {
+    color: var(--color-primary);
+    background: rgba(232, 146, 58, 0.08);
+  }
+
+  .nav-links a.active {
+    color: var(--color-primary);
+    background: rgba(232, 146, 58, 0.12);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  // Scroll effect for navbar
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+  }
+</script>

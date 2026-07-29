@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GalleryTimeline from '../components/GalleryTimeline.astro';
+import Lightbox from '../components/Lightbox.astro';
+
+// Gallery data — edit this to add/change media
+const galleryGroups = [
+  {
+    date: '7月27日',
+    label: '抵达澜沧',
+    items: [
+      {
+        type: 'image',
+        src: '/images/day0-arrival.jpg',
+        caption: '抵达澜沧拉祜族自治县',
+        note: '抵达澜沧，县团委领导热情迎接了我们。吃着刚摘的蔬菜和菌子，感受淳朴民风。',
+      },
+      {
+        type: 'image',
+        src: '/images/day0-arrival.jpg',
+        caption: '澜沧县特殊教育学校',
+        note: '这里是"情暖童心"暑托公益项目服务点，设施齐全，有钢琴室、舞蹈室等。（待替换照片）',
+      },
+    ],
+  },
+  {
+    date: '7月28日',
+    label: '初见童真',
+    items: [
+      {
+        type: 'image',
+        src: '/images/day1-classroom.jpg',
+        caption: '开课第一天 —— 音乐基础摸底',
+        note: '孩子们一开始有些拘谨，但当第一个小朋友站出来唱歌后，教室里响起了热烈的掌声。',
+      },
+      {
+        type: 'image',
+        src: '/images/day1-classroom.jpg',
+        caption: '合唱体验课',
+        note: '从拘谨到活跃，从沉默到歌唱。第一天，我们在孩子们的眼神里看到了光。（待替换照片）',
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout title="图片视频" description="和音滇韵实践团活动照片与视频记录">
+  <section class="section gallery-page">
+    <div class="container">
+      <h2 class="section-title">精彩瞬间</h2>
+      <p class="gallery-intro">按下快门的每一刻，都是澜沧江畔最温暖的记忆。</p>
+      <GalleryTimeline groups={galleryGroups} />
+    </div>
+  </section>
+
+  <Lightbox />
+</BaseLayout>
+
+<style>
+  .gallery-page {
+    padding-top: 48px;
+  }
+
+  .gallery-intro {
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 1rem;
+    margin-bottom: 56px;
+    margin-top: -24px;
+  }
+</style>

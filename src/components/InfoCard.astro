@@ -1,0 +1,61 @@
+---
+export interface Props {
+  icon: string;
+  label: string;
+  value: string;
+}
+
+const { icon, label, value } = Astro.props;
+---
+
+<div class="info-card">
+  <span class="info-icon">{icon}</span>
+  <div class="info-content">
+    <span class="info-label">{label}</span>
+    <span class="info-value">{value}</span>
+  </div>
+</div>
+
+<style>
+  .info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px;
+    background: var(--color-bg-white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .info-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .info-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+</style>

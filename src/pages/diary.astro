@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DiaryTimeline from '../components/DiaryTimeline.astro';
+
+// Import all diary markdown files
+const diaryFiles = await Astro.glob('../../content/diaries/*.md');
+
+const entries = diaryFiles
+  .map((file: any) => ({
+    day: file.frontmatter.day,
+    date: file.frontmatter.date,
+    title: file.frontmatter.title,
+    content: file.compiledContent(),
+  }))
+  .sort((a, b) => a.day - b.day);
+---
+
+<BaseLayout title="实践日记" description="和音滇韵实践团每日实践记录">
+  <section class="section diary-page">
+    <div class="container">
+      <h2 class="section-title">实践日记</h2>
+      <p class="diary-intro">从抵达澜沧的第一天到告别演出，十二天的每一个瞬间都值得铭记。</p>
+      <DiaryTimeline entries={entries} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .diary-page {
+    padding-top: 48px;
+  }
+
+  .diary-intro {
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 1rem;
+    margin-bottom: 56px;
+    margin-top: -24px;
+  }
+</style>

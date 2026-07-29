@@ -1,0 +1,336 @@
+---
+export interface GalleryMedia {
+  type: 'image' | 'video';
+  src: string;
+  caption: string;
+  note?: string;
+}
+
+export interface GalleryGroup {
+  date: string;
+  label: string;
+  items: GalleryMedia[];
+}
+
+const { groups = [] } = Astro.props as { groups: GalleryGroup[] };
+
+// Flatten all items for lightbox navigation
+const allItems: { type: 'image' | 'video'; src: string; caption: string }[] = [];
+groups.forEach((g) => {
+  g.items.forEach((item) => {
+    allItems.push({ type: item.type, src: item.src, caption: item.caption });
+  });
+});
+---
+
+<div class="gallery-timeline" id="gallery-timeline">
+  <div class="gallery-river"></div>
+
+  {groups.map((group, gi) => (
+    <div class="gallery-group">
+      <!-- Date node -->
+      <div class="gallery-date-node">
+        <span class="gallery-date-dot"></span>
+        <span class="gallery-date-text">{group.date}</span>
+      </div>
+
+      {group.items.map((item, ii) => {
+        const globalIndex = allItems.findIndex(
+          (ai) => ai.src === item.src
+        );
+        return (
+          <div class="gallery-row">
+            <!-- Left: spacer for timeline alignment -->
+            <div class="gallery-left">
+              <div class="gallery-river-connector"></div>
+            </div>
+
+            <!-- Center: media -->
+            <div class="gallery-center">
+              <button
+                class="gallery-media-btn"
+                data-index={String(globalIndex)}
+                data-type={item.type}
+                data-src={item.src}
+                data-caption={item.caption}
+              >
+                {item.type === 'image' ? (
+                  <img src={item.src} alt={item.caption} loading="lazy" />
+                ) : (
+                  <div class="gallery-video-preview">
+                    <img src={item.src} alt={item.caption} loading="lazy" />
+                    <span class="play-icon">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="white" opacity="0.9">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </button>
+            </div>
+
+            <!-- Right: annotation -->
+            <div class="gallery-right">
+              {item.note && (
+                <div class="gallery-note-bubble">
+                  <span class="gallery-note-text">{item.note}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  ))}
+</div>
+
+<!-- Hidden JSON data for lightbox -->
+<script id="gallery-data" type="application/json" set:text={JSON.stringify(allItems)}></script>
+
+<style>
+  .gallery-timeline {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .gallery-river {
+    position: absolute;
+    left: 120px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-primary-light),
+      var(--color-primary) 30%,
+      var(--color-accent-light) 60%,
+      var(--color-primary-light)
+    );
+    border-radius: 1px;
+    opacity: 0.5;
+  }
+
+  /* Date node */
+  .gallery-date-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 0 20px;
+    margin-left: 113px;
+  }
+
+  .gallery-date-node:first-child {
+    padding-top: 8px;
+  }
+
+  .gallery-date-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-bg);
+    box-shadow: 0 0 0 2px var(--color-primary-light);
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  .gallery-date-text {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+  }
+
+  /* Row */
+  .gallery-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 12px 0;
+  }
+
+  .gallery-left {
+    width: 120px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 8px;
+  }
+
+  .gallery-river-connector {
+    width: 2px;
+    height: 100%;
+    min-height: 20px;
+    opacity: 0;
+  }
+
+  .gallery-center {
+    flex: 1;
+    max-width: 500px;
+    position: relative;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .gallery-media-btn {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .gallery-media-btn:hover {
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.015);
+  }
+
+  .gallery-media-btn img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius-md);
+  }
+
+  .gallery-video-preview {
+    position: relative;
+  }
+
+  .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px;
+    height: 56px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  .gallery-media-btn:hover .play-icon {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  /* Right annotations */
+  .gallery-right {
+    width: 200px;
+    flex-shrink: 0;
+    padding-top: 8px;
+  }
+
+  .gallery-note-bubble {
+    position: relative;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    box-shadow: var(--shadow-sm);
+    cursor: default;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    max-height: 48px;
+    overflow: hidden;
+  }
+
+  .gallery-note-bubble::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 14px;
+    width: 12px;
+    height: 12px;
+    background: var(--color-bg-white);
+    border-left: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    transform: rotate(45deg);
+  }
+
+  .gallery-note-text {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Hover: bubble expands, media shifts left */
+  .gallery-row:hover .gallery-note-bubble {
+    max-height: 400px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
+  }
+
+  .gallery-row:hover .gallery-note-text {
+    display: block;
+    -webkit-line-clamp: unset;
+  }
+
+  .gallery-row:hover .gallery-center {
+    transform: translateX(-16px);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .gallery-river {
+      left: 16px;
+    }
+
+    .gallery-date-node {
+      margin-left: 9px;
+    }
+
+    .gallery-row {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .gallery-left {
+      width: 32px;
+    }
+
+    .gallery-right {
+      width: 100%;
+      padding-left: 44px;
+      padding-top: 0;
+    }
+
+    .gallery-note-bubble::before {
+      display: none;
+    }
+
+    .gallery-row:hover .gallery-center {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  function initGallery() {
+    const allItems = JSON.parse(
+      document.getElementById('gallery-data')?.textContent || '[]'
+    );
+
+    const mediaButtons = document.querySelectorAll('.gallery-media-btn');
+    mediaButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const index = parseInt(btn.getAttribute('data-index') || '0');
+        (window as any).__lightbox?.open(allItems, index);
+      });
+    });
+  }
+
+  initGallery();
+  document.addEventListener('astro:page-load', initGallery);
+</script>
