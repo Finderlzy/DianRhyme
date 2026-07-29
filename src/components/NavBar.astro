@@ -1,27 +1,31 @@
 ---
+const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
 
 const links = [
-  { href: '/', label: '首页' },
-  { href: '/diary', label: '实践日记' },
-  { href: '/gallery', label: '图片视频' },
+  { href: '', label: '首页' },
+  { href: 'diary', label: '实践日记' },
+  { href: 'gallery', label: '图片视频' },
 ];
 ---
 
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href="/" class="logo">和音滇韵</a>
+    <a href={base} class="logo">和音滇韵</a>
     <ul class="nav-links">
-      {links.map((link) => (
-        <li>
-          <a
-            href={link.href}
-            class={currentPath === link.href ? 'active' : ''}
-          >
-            {link.label}
-          </a>
-        </li>
-      ))}
+      {links.map((link) => {
+        const fullHref = base + link.href;
+        // Build what the page path looks like: /DianRhyme/ or /DianRhyme/diary/
+        const pagePath = base + (link.href ? link.href + '/' : '');
+        const isActive = currentPath === pagePath || currentPath === (base + link.href);
+        return (
+          <li>
+            <a href={fullHref} class={isActive ? 'active' : ''}>
+              {link.label}
+            </a>
+          </li>
+        );
+      })}
     </ul>
   </div>
 </nav>
@@ -96,7 +100,6 @@ const links = [
 </style>
 
 <script>
-  // Scroll effect for navbar
   const navbar = document.querySelector('.navbar');
   if (navbar) {
     window.addEventListener('scroll', () => {
