@@ -51,22 +51,24 @@ const initials = name.slice(-2);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
     position: relative;
-    transition: box-shadow 0.35s ease, width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: box-shadow 0.35s ease, width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.35s ease;
     flex-shrink: 0;
     cursor: default;
     width: 155px;
+    height: 72px;
     overflow: hidden;
   }
 
   .team-card:hover {
     box-shadow: var(--shadow-lg);
     z-index: 10;
+    height: 120px;
   }
 
   .card-inner {
     display: flex;
     align-items: center;
-    min-height: 44px;
+    height: 100%;
     padding: 0 14px;
     gap: 0;
   }
@@ -116,7 +118,7 @@ const initials = name.slice(-2);
   }
 
   .team-card--right .card-bio p {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--color-text-light);
     line-height: 1.55;
     margin: 0;
@@ -128,7 +130,7 @@ const initials = name.slice(-2);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     flex-shrink: 0;
     text-align: center;
   }
@@ -147,8 +149,8 @@ const initials = name.slice(-2);
 
   /* ===== Avatar circle ===== */
   .avatar-circle {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -157,24 +159,24 @@ const initials = name.slice(-2);
   }
 
   .avatar-circle--photo {
-    width: 56px;
-    height: 56px;
+    width: 50px;
+    height: 50px;
   }
 
   .initials {
     font-family: var(--font-heading);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: #fff;
   }
 
   .initials--photo {
-    font-size: 0.9rem;
+    font-size: 0.78rem;
   }
 
   .photo-img {
-    width: 56px;
-    height: 56px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     object-fit: cover;
   }
