@@ -1,130 +1,70 @@
 # 和音滇韵
 
-> 北京科技大学"酉良和音滇韵"实践团 · 音乐支教成果展示网页
+> 北京科技大学"酉良和音滇韵民族团结实践团" · 音乐支教成果展示网页
 
 [![Deploy to GitHub Pages](https://github.com/Finderlzy/DianRhyme/actions/workflows/deploy.yml/badge.svg)](https://github.com/Finderlzy/DianRhyme/actions)
 
-## 项目简介
-
-2026 年盛夏，北科大"酉良和音滇韵"实践团的 7 名成员跨越千里来到云南省澜沧拉祜族自治县，开展了为期 12 天的音乐支教活动。本仓库是此次社会实践的成果展示网页。
-
 **在线访问**：https://finderlzy.github.io/DianRhyme/
 
-## 技术栈
+## 这是什么
 
-- **框架**：[Astro](https://astro.build) 4.x — 静态站点生成器
-- **内容管理**：Markdown（`.md` 文件）
-- **样式**：原生 CSS（自定义属性 + 暖色调主题）
-- **部署**：GitHub Pages + GitHub Actions 自动构建部署
-- **字体**：Noto Serif SC（Google Fonts）
+2026 年盛夏，北科大"酉良和音滇韵民族团结实践团"的 9 名成员跨越千里来到云南省澜沧拉祜族自治县，开展了为期 14 天的音乐支教活动。本仓库是此次社会实践的成果展示网页：
 
-## 页面结构
+- **首页** — 实践概况、关于这次实践、团队成员
+- **实践日记** — 按天记录的故事，点击展开
+- **图片视频** — 时间线画廊 + 注释 + 点击放大
 
-| 页面 | 路径 | 说明 |
-|------|------|------|
-| 首页 | `/` | 实践概况、团队介绍 |
-| 实践日记 | `/diary` | 时间线列表 + 点击展开详情 |
-| 图片视频 | `/gallery` | 三列画廊 + 注释气泡 + Lightbox |
+## 改内容只需要记住 3 件事
 
-## 本地开发
+| 想改什么 | 操作 | 文件 |
+|----------|------|------|
+| **实践日记** | 新建或编辑 `.md` 文件 | `content/diaries/`（如 `day1.md`） |
+| **图片视频页** | 编辑 `galleryGroups` 数组 | `src/pages/gallery.astro` |
+| **首页文字 / 团队成员** | 编辑 `infoItems` / `teamRows` 数组 | `src/pages/index.astro` |
 
-### 环境要求
+- 图片放在 `public/images/` 文件夹中
+- 引用图片的路径必须以 `/DianRhyme/` 开头（网站部署在子路径下，写 `/images/...` 线上会 404）
 
-- Node.js ≥ 20
-- npm ≥ 10
+> 每一步的详细图文操作见 **[使用指南.md](使用指南.md)**——如何新增日记、添加照片、替换团队头像、发布更新等。
 
-### 开始开发
+## 本地预览
 
 ```bash
-# 克隆项目
-git clone https://github.com/Finderlzy/DianRhyme.git
-cd DianRhyme
-
-# 安装依赖
 npm install
-
-# 启动开发服务器
 npm run dev
 ```
 
-浏览器打开 `http://localhost:4321/DianRhyme/` 查看效果。文件修改后自动热更新。
+浏览器打开 `http://localhost:4321/DianRhyme/`（注意地址带 `/DianRhyme/`）。修改文件后自动热更新。
 
-### 构建
+## 发布更新
 
 ```bash
-npm run build
+npm run build          # 1. 构建（内容有问题会在这里报错）
+git add -A             # 2. 暂存
+git commit -m "update: 描述改了什么"
+git push               # 3. 推送 → GitHub Actions 自动部署
 ```
 
-构建产物输出到 `dist/` 目录。
+推送后约 1-2 分钟生效，可在 [Actions 页面](https://github.com/Finderlzy/DianRhyme/actions) 查看进度。
+
+## 技术栈
+
+Astro 4（静态站点生成）+ 原生 CSS。需要 Node.js ≥ 20、npm ≥ 10。
 
 ## 项目结构
 
 ```
-DianRhyme/
-├── src/
-│   ├── pages/               # 页面文件
-│   │   ├── index.astro      # 首页
-│   │   ├── diary.astro      # 实践日记
-│   │   └── gallery.astro    # 图片视频
-│   ├── layouts/
-│   │   └── BaseLayout.astro # 公共布局（导航 + 页脚）
-│   ├── components/          # 可复用组件
-│   │   ├── NavBar.astro
-│   │   ├── Footer.astro
-│   │   ├── DiaryTimeline.astro
-│   │   ├── GalleryTimeline.astro
-│   │   ├── Lightbox.astro
-│   │   ├── InfoCard.astro
-│   │   └── TeamCard.astro
-│   └── styles/
-│       └── global.css       # 全局样式 + CSS 变量
-├── content/                 # ⭐ 可编辑内容（Markdown）
-│   ├── diaries/             # 每日日记（day0.md, day1.md, ...）
-│   ├── overview.md          # 首页概况
-│   └── team.md              # 团队信息
-├── public/
-│   ├── images/              # 图片资源
-│   └── videos/              # 视频资源
-├── astro.config.mjs         # Astro 配置
-├── 需求文档.md               # 需求说明
-├── 使用指南.md               # 内容编辑指南
-└── 开发总结.md               # 开发过程记录
+content/diaries/    ★ 实践日记（改日记就看这里）
+src/pages/          index.astro（首页）、diary.astro、gallery.astro（画廊数据）
+public/images/      图片资源（含团队成员头像）
+使用指南.md          ★ 内容编辑分步教程
 ```
 
-## 内容编辑
+> 注：`content/overview.md`、`content/team.md` 是早期遗留文件，**不会被网页读取**，改了不会生效。首页正文和团队数据都硬编码在 `src/pages/index.astro` 中。
 
-所有可编辑内容在 `content/` 目录下，使用 Markdown 格式。图片放到 `public/images/` 下。
+## 其他文档
 
-详细操作指南见 **[使用指南.md](使用指南.md)**，包括：
-- 如何修改每个页面的内容
-- 如何新增/修改/删除实践日记
-- 如何管理图片和视频
-- 如何部署更新
-
-## 部署
-
-本项目通过 GitHub Actions 自动部署到 GitHub Pages。
-
-```bash
-# 日常更新流程
-npm run build          # 构建
-git add -A
-git commit -m "update: 描述"
-git push               # 推送后自动部署
-```
-
-每次推送到 `main` 分支后，GitHub Actions 自动构建并部署。可在 [Actions 页面](https://github.com/Finderlzy/DianRhyme/actions) 查看部署状态。
-
-## 设计
-
-- **配色**：暖色调 — 琥珀/蜂蜜主色，米黄背景，淡绿点缀
-- **字体**：Noto Serif SC（标题），系统无衬线（正文）
-- **风格**：柔和、简约、干净，呼应支教与云南的民族文化氛围
-
-## 团队
-
-北科大"酉良和音滇韵"实践团 · 7 名成员 · 2026 年暑期社会实践
-
-## 许可
-
-本项目为社会实践成果展示用途。
+- [使用指南.md](使用指南.md) — 内容编辑教程（最常用）
+- [需求文档.md](需求文档.md) — 项目需求说明
+- [开发总结.md](开发总结.md) — 开发过程记录
+- `docs/` — 开发记录（changelog）、验收报告、设计文档

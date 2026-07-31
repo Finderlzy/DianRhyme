@@ -1,5 +1,115 @@
 # 开发记录
 
+## v2.0 — 完整发版（v1.4 + v1.5 + 文档体系重构）
+
+**日期**：2026-07-31
+
+### 变更内容
+
+聚合 v1.4、v1.5 及发版前的全部未提交改动，作为 v2.0 统一发版：
+
+1. **队徽徽章化**（v1.4）：NavBar / Hero / Footer 三处圆形徽章，队徽 `logo.jpg`
+2. **团队卡片行居中**（v1.5）：首页三行卡片（2/2/5 人）居中 + `overflow-x` 横向溢出修复
+3. **文案统一**（v1.5）：实践时间 14 天、团队全称"酉良和音滇韵民族团结实践团"
+4. **README 重构**：改为面向编辑者的入口文档——"改内容 3 件事"表格（日记 / 画廊 / 首页）+ 发布流程，标注 `overview.md`、`team.md` 不被页面读取
+5. **使用指南修正**：1.3 改为编辑 `index.astro`（原指引的 `overview.md` 不生效）、1.4 更新为 `teamRows` 真实结构、人数统一 9 名、本地视频缩略图限制说明、行号同步
+6. **AGENTS.md 更新**：环境要求（Node ≥ 20）、画廊视频条目缺陷说明
+7. **.gitignore**：忽略 `待解决问题.md`（个人草稿）、`desktop.ini`
+8. **版本号**：`package.json` 1.0.0 → 2.0.0，git tag `v2.0`
+
+### 涉及文件
+
+| 文件 | 变更 |
+|---|---|
+| `src/pages/index.astro` / `src/components/Footer.astro` / `src/components/NavBar.astro` / `src/layouts/BaseLayout.astro` / `src/styles/global.css` | v1.4 徽章 + v1.5 行居中与文案 |
+| `src/pages/diary.astro` | 导语"十四天" |
+| `README.md` / `使用指南.md` / `AGENTS.md` | 文档体系重构 |
+| `.gitignore` / `package.json` | 忽略项、版本号 |
+| `docs/验收报告-v1.4.md` / `docs/验收报告-v1.5.md` | 验收报告 |
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| 本次提交 | v2.0 完整发版（tag `v2.0`） |
+
+---
+
+## v1.5 — 团队卡片行居中 + 文案更新
+
+**日期**：2026-07-31
+
+### 变更内容
+
+1. **团队卡片行居中**：首页"团队成员"三行卡片（2/2/5 人）由靠左对齐改为每行整体水平居中（`.team-row` 加 `justify-content: center`），悬停展开时行对称重新居中
+2. **横向溢出修复**：`.team` 加 `overflow-x: hidden`，消除 5 人行悬停展开（总宽约 1160px > 容器 1052px）在窄屏下引发的页面横向滚动条
+3. **实践时间统一 14 天**：日期区间改为 7 月 26 日 — 8 月 8 日，同步 hero 副标题"十四个日夜"、about"为期 14 天""14 天很短"、日记页"十四天"
+4. **团队全称统一**：正式名称统一为"酉良和音滇韵民族团结实践团"（hero 小字、Footer、meta description、团队卡片、about 正文）；郭辉 bio 的"2025年酉良实践团团长"历史表述保留
+5. **文档同步**：README、使用指南、overview、需求文档、开发总结 等同步更新
+6. **顺带修正**：`.team-row` 中 `display: flex` 的错误缩进
+
+### 涉及文件
+
+| 文件 | 变更 |
+|---|---|
+| `src/pages/index.astro` | 行居中 CSS + 文案更新 |
+| `src/pages/diary.astro` | 导语"十四天" |
+| `src/components/Footer.astro` | Footer 全称 |
+| `src/layouts/BaseLayout.astro` | meta description 全称 |
+| `README.md` / `content/overview.md` / `需求文档.md` / `开发总结.md` / `使用指南.md` | 文案同步 |
+| `docs/验收报告-v1.5.md` | 验收报告 |
+
+### 验收
+
+- **结论**：通过（详情见 `docs/验收报告-v1.5.md`）
+- **已知说明**：悬停对称展开、无横向滚动条为交互视觉行为，已通过构建产物 CSS 规则代码级验证，最终视觉确认以浏览器为准
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| 暂未提交 | 待用户确认后统一提交 |
+
+---
+
+## v1.4 — 首页队徽（Logo）徽章化
+
+**日期**：2026-07-31
+
+### 变更内容
+
+为首页队徽"和音滇韵"添加圆形徽章容器（`.logo-badge`），解决 JPG 背景与页面背景色不一致的问题：
+
+1. **徽章容器**：用 `border-radius: 50%; overflow: hidden; background-color: var(--color-bg-white)` 将队徽裁剪为圆形，隐藏原始 JPG 边缘背景色
+2. **三处应用**：NavBar 文字右侧、Hero 大标题旁、Footer 文字右侧
+3. **尺寸适配**：Nav/Footer 30×30px，Hero 64×64px，均与周围文字成比例
+4. **间距收紧**：NavBar/Footer 间距从 8px 缩至 6px；Hero 间距从 16px 缩至 10px，标题下边距从 24px 缩至 16px
+5. **旧 CSS 清理**：移除已废弃的 `.logo-img`、`.hero-logo`、`.footer-logo-img` 规则
+6. **AGENTS.md 更新**：新增 Logo 存放规范与徽章尺寸说明
+
+### 涉及文件
+
+| 文件 | 变更 |
+|---|---|
+| `src/styles/global.css` | 新增 `.logo-badge` 基础样式 |
+| `src/components/NavBar.astro` | logo 包裹 `<span class="logo-badge">`，尺寸 30×30px |
+| `src/pages/index.astro` | Hero 区 logo 包裹 `<span class="logo-badge">`，尺寸 64×64px |
+| `src/components/Footer.astro` | footer logo 包裹 `<span class="logo-badge">`，尺寸 30×30px |
+| `docs/验收报告-v1.4.md` | 验收报告 |
+
+### 验收
+
+- **结论**：通过（详情见 `docs/验收报告-v1.4.md`）
+- **已知说明**：队徽 JPG 文件 `public/images/logo.jpg` 需由用户提供；当前构建产物中 `logo.jpg` 尚未存在，部署前需放入文件
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| 本次提交 | 队徽徽章化：Navbar + Hero + Footer，三处圆形徽章，间距与尺寸调整 |
+
+---
+
 ## v1.3 — 团队成员真人照片
 
 **日期**：2026-07-31
@@ -100,6 +210,9 @@
 
 | 版本 | 日期 | 说明 |
 |---|---|---|
+| v2.0 | 2026-07-31 | 完整发版：队徽徽章化 + 行居中 + 文案统一 + README/使用指南重构 |
+| v1.5 | 2026-07-31 | 团队卡片行居中 + 文案更新（14 天 / 全称） |
+| v1.4 | 2026-07-31 | 首页队徽（Logo）徽章化 |
 | v1.3 | 2026-07-31 | 团队成员真人照片 |
 | v1.2 | 2026-07-31 | 团队介绍 UI 改造 |
 | v1.1 | 2026-07 | 项目初始化

@@ -11,7 +11,10 @@ const links = [
 
 <nav class="navbar">
   <div class="navbar-inner">
-    <a href={base} class="logo">和音滇韵</a>
+    <a href={base} class="logo">
+      <span class="logo-text">和音滇韵</span>
+      <span class="logo-badge"><img src={base + 'images/logo.jpg'} alt="队徽" /></span>
+    </a>
     <ul class="nav-links">
       {links.map((link) => {
         const fullHref = base + link.href;
@@ -61,11 +64,19 @@ const links = [
   }
 
   .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-heading);
     font-size: 1.35rem;
     font-weight: 700;
     color: var(--color-text);
     letter-spacing: 0.05em;
+  }
+
+  .logo-badge {
+    width: 30px;
+    height: 30px;
   }
 
   .logo:hover {

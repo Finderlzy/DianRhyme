@@ -6,7 +6,9 @@
 - **构建**：`npm run build` → 输出到 `dist/`
 - **部署**：推送到 `main` → GitHub Actions 自动部署到 Pages
 - **无 lint、typecheck、test 命令**
-- **框架**：Astro 4.x（手动搭建，非 `create-astro` 脚手架，兼容 Node 20）
+- **框架**：Astro 4.x（手动搭建，非 `create-astro` 脚手架）
+- **环境要求**：Node ≥ 20、npm ≥ 10（见 README；CI 固定 Node 20）
+- **工作方式**：只执行用户明确要求的改动；不要自作主张新增或修改文件（如自动补 `docs/changelog.md` 记录、顺手清理代码等），除非用户要求
 
 ## 关键：子路径 base
 
@@ -14,6 +16,7 @@
 
 - `.astro` 文件中：用 `import.meta.env.BASE_URL`（解析为 `/DianRhyme/`）
 - `content/` 下的 Markdown 文件中：直接写 `/DianRhyme/images/...`
+- 例外：`index.astro` 的 `teamRows` 头像路径硬编码为 `/DianRhyme/images/avatars/...`（未用 BASE_URL），若改 base 需一并处理
 
 ## 架构
 
@@ -26,11 +29,11 @@
 
 | 文件 | 控制内容 |
 |------|---------|
-| `content/diaries/day*.md` | 实践日记（增删 = 创建/删除 .md 文件） |
-| `content/overview.md` | 首页"关于这次实践"正文 |
-| `content/team.md` | 团队信息（极少修改） |
+| `content/diaries/day*.md` | 实践日记（增删 = 创建/删除 .md 文件）—— **唯一被页面读取的内容** |
 
-日记 `.md` 文件**必须**包含 frontmatter 字段：`day`、`date`、`title`。缺失会导致构建失败。
+⚠️ `content/overview.md`、`content/team.md` **未被任何页面读取**。首页"关于这次实践"正文和团队数据全部硬编码在 `src/pages/index.astro`，改这两个 .md 文件不会影响页面。
+
+日记 `.md` 文件**必须**包含 frontmatter 字段：`day`、`date`、`title`，缺失会导致构建失败。`day` 必须是**无引号的数字**（`diary.astro:15` 用 `a.day - b.day` 排序，字符串会静默排序错乱）。
 
 ## 添加媒体
 
@@ -60,3 +63,4 @@ docs/changelog.md  — 开发记录
 - `Astro.glob` 相对路径写错 → `AstroGlobNoMatch` 错误
 - `npm run dev` 的地址是 `localhost:4321/DianRhyme/`（含 base），不是 `localhost:4321/`
 - PowerShell 中直接 `npm run dev` 会因执行策略失败 → 先运行 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+- 画廊 `type: 'video'` 条目有缺陷：`GalleryTimeline.astro:61` 用 `item.src` 渲染缩略 `<img>`，Lightbox 又用同一 `src` 播放 `<video>` —— 一个 `src` 无法同时是图片和视频。当前项目无视频文件；若要支持视频需给 `GalleryMedia` 增加独立 poster 字段

@@ -25,6 +25,10 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Personal drafts
+待解决问题.md
 
 # Logs
 *.log

@@ -5,8 +5,8 @@ import TeamCard from '../components/TeamCard.astro';
 
 const infoItems = [
   { icon: '📍', label: '实践地点', value: '云南省普洱市澜沧拉祜族自治县' },
-  { icon: '📅', label: '实践时间', value: '2026年7月27日 — 8月7日 · 共12天' },
-  { icon: '👥', label: '实践团队', value: '北科大"酉良和音滇韵"实践团 · 9名成员' },
+  { icon: '📅', label: '实践时间', value: '2026年7月26日 — 8月8日 · 共14天' },
+  { icon: '👥', label: '实践团队', value: '北科大"酉良和音滇韵民族团结实践团" · 9名成员' },
   { icon: '🎵', label: '实践内容', value: '音乐基础教学 + 合唱排练 + 民族文化交融' },
 ];
 
@@ -83,13 +83,16 @@ const teamRows = [
 ];
 ---
 
-<BaseLayout title="首页" description="北京科技大学'酉良和音滇韵'实践团赴云南澜沧音乐支教成果展示">
+<BaseLayout title="首页" description="北京科技大学'酉良和音滇韵民族团结实践团'赴云南澜沧音乐支教成果展示">
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
-      <p class="hero-eyebrow">北京科技大学 · 酉良实践团</p>
-      <h1 class="hero-title">和音滇韵</h1>
-      <p class="hero-subtitle">以音乐为桥，连接京滇山海。十二个日夜，我们在澜沧江畔，用旋律点亮童心，用和声共鸣民族情谊。</p>
+      <p class="hero-eyebrow">北京科技大学 · 酉良和音滇韵民族团结实践团</p>
+      <h1 class="hero-title">
+        <span class="hero-title-text">和音滇韵</span>
+        <span class="logo-badge"><img src={import.meta.env.BASE_URL + 'images/logo.jpg'} alt="队徽" /></span>
+      </h1>
+      <p class="hero-subtitle">以音乐为桥，连接京滇山海。十四个日夜，我们在澜沧江畔，用旋律点亮童心，用和声共鸣民族情谊。</p>
     </div>
     <div class="hero-image">
       <div class="hero-placeholder">
@@ -116,10 +119,10 @@ const teamRows = [
     <div class="container">
       <h2 class="section-title">关于这次实践</h2>
       <div class="about-text">
-        <p>2026 年盛夏，我们——北科大"酉良和音滇韵"实践团的 9 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 12 天的音乐支教活动。</p>
+        <p>2026 年盛夏，我们——北科大"酉良和音滇韵民族团结实践团"的 9 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 14 天的音乐支教活动。</p>
         <p>澜沧，这座西南边陲的小城，毗邻缅甸，山高水远。这里的孩子许多是留守儿童，他们纯真的眼睛里藏着对音乐的渴望，却少有接触正规音乐教育的机会。</p>
         <p>我们以"情暖童心"公益托管班为平台，从最基础的简谱、节奏教起，带着孩子们学习发声方法，排练合唱曲目——《萱草花》的温柔、《大鱼》的辽阔、《如愿》的深情、《保卫黄河》的豪迈。我们还融入了多民族音乐元素，让音乐成为民族文化交融的桥梁。</p>
-        <p>12 天很短，但音乐播下的种子会生根发芽。我们用镜头和文字记录下这段旅程，愿你在这里看见我们的故事。</p>
+        <p>14 天很短，但音乐播下的种子会生根发芽。我们用镜头和文字记录下这段旅程，愿你在这里看见我们的故事。</p>
       </div>
     </div>
   </section>
@@ -178,6 +181,9 @@ const teamRows = [
     letter-spacing: 0.06em;
     line-height: 1.15;
     margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
   .hero-subtitle {
@@ -246,11 +252,16 @@ const teamRows = [
   }
 
   /* ===== Team ===== */
+  .team {
+    overflow-x: hidden;
+  }
+
   .team-row {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .team-row:last-child {
@@ -283,5 +294,10 @@ const teamRows = [
     .hero-title {
       font-size: 2.2rem;
     }
+  }
+
+  .hero-title .logo-badge {
+    width: 64px;
+    height: 64px;
   }
 </style>

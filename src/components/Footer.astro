@@ -1,8 +1,14 @@
+---
+const base = import.meta.env.BASE_URL;
+---
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <span class="footer-logo">和音滇韵</span>
-      <p class="footer-sub">北京科技大学 · 酉良实践团</p>
+      <span class="footer-logo">
+        <span class="footer-logo-text">和音滇韵</span>
+        <span class="logo-badge"><img src={base + 'images/logo.jpg'} alt="队徽" /></span>
+      </span>
+      <p class="footer-sub">北京科技大学 · 酉良和音滇韵民族团结实践团</p>
     </div>
     <div class="footer-info">
       <p>北京科技大学 2026 年暑期社会实践</p>
@@ -41,10 +47,18 @@
   }
 
   .footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--color-text);
+  }
+
+  .footer-logo .logo-badge {
+    width: 30px;
+    height: 30px;
   }
 
   .footer-sub {
