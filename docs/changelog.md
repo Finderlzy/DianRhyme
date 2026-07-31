@@ -9,19 +9,33 @@
 为首页团队成员卡片（`TeamCard`）添加真人照片：
 
 1. **折叠态不变**：仍显示彩色圆圈 + 姓名缩写 + 职务
-2. **展开态**：中部照片占位改为 96×96 方形圆角真人照片（`border-radius: 10px`，`object-fit: cover`）
+2. **展开态**：中部照片占位改为 96×120 竖长圆角真人照片（`border-radius: 10px`，`object-fit: cover`，竖幅裁剪避免切掉头发）
 3. **高度适配**：展开高度 120px → 140px，照片槽位 max-width 56px → 110px
-4. **占位升级**：无照片成员显示 96×96 方形圆角渐变占位，字号同步放大
+4. **占位升级**：无照片成员显示 96×120 竖长圆角渐变占位，字号同步放大
 5. **9 人照片绑定**：`index.astro` 中 9 位成员 `avatar` 字段填入 `/DianRhyme/images/avatars/<拼音>.jpg`
 
 ### 涉及文件
 
 | 文件 | 变更 |
 |---|---|
-| `public/images/avatars/*.jpg` | 新增 9 张成员照片 |
+| `public/images/avatars/*.jpg` | 新增 9 张成员照片（lizhaoyan 后替换为竖版 1280×1707） |
 | `src/pages/index.astro` | 9 处 `avatar` 路径填充 |
 | `src/components/TeamCard.astro` | 照片尺寸/形状、展开高度、占位样式 |
 | `使用指南.md` | 1.6 节头像说明更新 |
+| `docs/验收报告-v1.3.md` | 验收报告 |
+
+### 验收
+
+- **结论**：通过（详情见 `docs/验收报告-v1.3.md`）
+- **已知说明**：`leizichen.jpg` 为横版（1534×1024），`cover` 裁切会切上下，经确认无需修改；`public/images/avatars/resources/` 为未跟踪临时文件，建议推送前清理
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| `aa68670` | 设计文档：团队成员真人照片 spec |
+| `3c7d751` | 照片样式 + 9 人 avatar 绑定 |
+| 本次提交 | 照片尺寸调整为 96×120 竖长、验收报告、changelog v1.3 完善 |
 
 ---
 
