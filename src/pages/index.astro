@@ -6,19 +6,80 @@ import TeamCard from '../components/TeamCard.astro';
 const infoItems = [
   { icon: '📍', label: '实践地点', value: '云南省普洱市澜沧拉祜族自治县' },
   { icon: '📅', label: '实践时间', value: '2026年7月27日 — 8月7日 · 共12天' },
-  { icon: '👥', label: '实践团队', value: '北科大"酉良和音滇韵"实践团 · 7名成员' },
+  { icon: '👥', label: '实践团队', value: '北科大"酉良和音滇韵"实践团 · 9名成员' },
   { icon: '🎵', label: '实践内容', value: '音乐基础教学 + 合唱排练 + 民族文化交融' },
 ];
 
-const teamMembers = [
-  { name: '雷梓宸', role: '队长 · 统筹安排 · 审核' },
-  { name: '杜雅芬', role: '文字撰写 · 排版 · 教学' },
-  { name: '郭辉', role: '内容审核 · 质量把关' },
-  { name: '李昭琰', role: '技术支撑 · 摄影摄像 · 网页开发' },
-  { name: '邓剑', role: '教学组 · 教授《保卫黄河》' },
-  { name: '巴宗胜', role: '教学组 · 教授《有我》' },
-  { name: '曾嘉', role: '教学组 · 藏族民歌教学' },
-  { name: '张尧', role: '教学组 · 蒙古族民歌教学' },
+const teamRows = [
+  {
+    expandDirection: 'right' as const,
+    members: [
+      {
+        name: '孙雅楠',
+        role: '指导老师',
+        bio: '外国语学院研工组长、就业指导教师，外研24、本科23级辅导员。曾获评北京科技大学暑期社会实践优秀指导教师、社会实践先进工作者，具备较丰富的指导经验。',
+        avatar: '',
+      },
+      {
+        name: '郭辉',
+        role: '指导学姐',
+        bio: '大数据241班。曾担任2025年酉良实践团团长，带领团队斩获暑期社会实践银奖团队。今年以指导学姐身份加入，倾尽过往实践经验，全程协助小队顺利开展各项支教、调研工作，与各位青年同行，以实际行动书写民族团结答卷。',
+        avatar: '',
+      },
+    ],
+  },
+  {
+    expandDirection: 'right' as const,
+    members: [
+      {
+        name: '雷梓宸',
+        role: '队长 · 小提琴',
+        bio: '性格热情开朗，爱好音乐，擅长小提琴，也是学校合唱团与管乐团的成员。期待与各位一起完成支教和非遗音乐文化传承工作。',
+        avatar: '',
+      },
+      {
+        name: '张尧',
+        role: '副队长 · 外联策划',
+        bio: '材料2507，喜欢音乐，擅长钢琴和吉他，现任北科合唱团钢琴伴奏和管乐团打击乐声部成员，曾任中央民族大学附属中学合唱团团长兼钢伴，多次组织策划、登台国家大剧院等合唱专场音乐会。在本次队伍中主要担任外联和策划的职责。',
+        avatar: '',
+      },
+    ],
+  },
+  {
+    expandDirection: 'right' as const,
+    members: [
+      {
+        name: '杜雅芬',
+        role: '教学宣传',
+        bio: '英语252班，性格温和有亲和力，拥有一学期支教经历，十分擅长和小朋友相处。期待将拉祜特色音乐融入教学，做到寓教于乐。在完成推文、PPT制作等宣传工作的同时，以温柔陪伴守护山间孩童。',
+        avatar: '',
+      },
+      {
+        name: '李昭琰',
+        role: '摄影记录',
+        bio: '机械2511，不太擅长站在台上讲很多话，但很愿意和小朋友们交流。除此之外会在一旁细心观察、完整记录，踏实做好每一件幕后小事。',
+        avatar: '',
+      },
+      {
+        name: '邓剑',
+        role: '教学组',
+        bio: '矿业2503班，热爱音乐、坚持运动，成长于云南，对家乡少数民族风土有着深厚感情。希望用音乐搭建沟通桥梁，带领当地少年感受音律之美，以微薄之力促进各民族交往交流交融，助力民族团结进步。',
+        avatar: '',
+      },
+      {
+        name: '巴宗胜',
+        role: '教学组',
+        bio: '机械2504班，善于倾听沟通，团队协作意识强。平时喜爱音乐，闲暇时会听歌、学习简单乐曲。希望发挥自己耐心友善的长处，用音乐搭建交流桥梁，尊重各族文化，在实践中传递温暖，尽自己一份力促进各民族友好相处。',
+        avatar: '',
+      },
+      {
+        name: '曾嘉',
+        role: '教学组',
+        bio: '机械工程学院，MBTI是ENTP，天真的理想主义者。性格开朗随和，平时喜欢踢足球和弹琴，非常有幸加入队伍，希望与大家愉快地度过两周。',
+        avatar: '',
+      },
+    ],
+  },
 ];
 ---
 
@@ -55,7 +116,7 @@ const teamMembers = [
     <div class="container">
       <h2 class="section-title">关于这次实践</h2>
       <div class="about-text">
-        <p>2026 年盛夏，我们——北科大"酉良和音滇韵"实践团的 7 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 12 天的音乐支教活动。</p>
+        <p>2026 年盛夏，我们——北科大"酉良和音滇韵"实践团的 9 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 12 天的音乐支教活动。</p>
         <p>澜沧，这座西南边陲的小城，毗邻缅甸，山高水远。这里的孩子许多是留守儿童，他们纯真的眼睛里藏着对音乐的渴望，却少有接触正规音乐教育的机会。</p>
         <p>我们以"情暖童心"公益托管班为平台，从最基础的简谱、节奏教起，带着孩子们学习发声方法，排练合唱曲目——《萱草花》的温柔、《大鱼》的辽阔、《如愿》的深情、《保卫黄河》的豪迈。我们还融入了多民族音乐元素，让音乐成为民族文化交融的桥梁。</p>
         <p>12 天很短，但音乐播下的种子会生根发芽。我们用镜头和文字记录下这段旅程，愿你在这里看见我们的故事。</p>
@@ -67,11 +128,19 @@ const teamMembers = [
   <section class="section team">
     <div class="container">
       <h2 class="section-title">团队成员</h2>
-      <div class="team-grid">
-        {teamMembers.map((member) => (
-          <TeamCard name={member.name} role={member.role} />
-        ))}
-      </div>
+      {teamRows.map((row) => (
+        <div class="team-row">
+          {row.members.map((member) => (
+            <TeamCard
+              name={member.name}
+              role={member.role}
+              bio={member.bio}
+              avatar={member.avatar || undefined}
+              expandDirection={row.expandDirection}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   </section>
 </BaseLayout>
@@ -177,10 +246,15 @@ const teamMembers = [
   }
 
   /* ===== Team ===== */
-  .team-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+  .team-row {
+    display: flex;
+    justify-content: center;
     gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .team-row:last-child {
+    margin-bottom: 0;
   }
 
   /* ===== Responsive ===== */
@@ -199,18 +273,15 @@ const teamMembers = [
       grid-template-columns: 1fr;
     }
 
-    .team-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .team-row {
+      flex-wrap: wrap;
+      gap: 16px;
     }
   }
 
   @media (max-width: 600px) {
     .hero-title {
       font-size: 2.2rem;
-    }
-
-    .team-grid {
-      grid-template-columns: 1fr 1fr;
     }
   }
 </style>
