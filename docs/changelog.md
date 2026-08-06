@@ -1,5 +1,39 @@
 # 开发记录
 
+## v2.2 — 实践过程记录改造为推文时间线
+
+**日期**：2026-08-06
+
+### 变更内容
+
+将"实践过程记录"页从"逐日日记全文"改版为"推文时间线"：下线日记全文展示，上线推文卡片时间线，并完成真实内容录入。
+
+1. **下线日记全文展示**：删除 `content/diaries/` 数据源与 `DiaryTimeline` 组件，页面不再展示日记全文
+2. **上线推文时间线**：新增 `content/posts/` 数据源（每篇一个 `.md`，frontmatter 字段 `date/title/cover/excerpt/url`）与 `PostTimeline` 推文卡片组件；`diary.astro` 通过 `import.meta.glob` 读取并按 `date` 升序排序传入组件；卡片含封面（缺省渐变 🎵 占位）、日期、标题、两行摘要，整卡外链微信公众号原文（`target="_blank" rel="noopener noreferrer"`）
+3. **真实内容录入**：录入 10 篇真实推文（7.10–8.4），封面图入库 `public/images/posts/`
+4. **文档同步**：README、使用指南更新为推文操作指南，消除"改版中" / "日记"过时描述
+
+### 涉及文件
+
+| 文件 | 变更 |
+|---|---|
+| `src/pages/diary.astro` | 重写：移除 `content/diaries` 读取与 `DiaryTimeline` 引用，改为 `import.meta.glob('../../content/posts/*.md')` 升序读取传入组件 |
+| `src/components/PostTimeline.astro` | 新增：推文卡片时间线组件 |
+| `src/components/DiaryTimeline.astro` | 删除 |
+| `content/posts/*.md` | 新增：10 篇真实推文 |
+| `content/diaries/` | 删除 |
+| `public/images/posts/` | 新增：10 张推文封面 |
+| `README.md` / `使用指南.md` / `AGENTS.md` | 文档同步为推文定位 |
+| `docs/验收报告-post-timeline-phase0~3.md` | 验收报告（Phase 0 清理 / 1 数据结构 / 2 示例验证 / 3 真实录入） |
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| 本次提交 | v2.1 推文时间线改版（含 Phase 0–3 全部变更） |
+
+---
+
 ## v2.0 — 完整发版（v1.4 + v1.5 + 文档体系重构）
 
 **日期**：2026-07-31
