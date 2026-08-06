@@ -1,15 +1,43 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PostTimeline from '../components/PostTimeline.astro';
+
+// Read all post markdown files (import.meta.glob returns {} when dir is empty, avoiding AstroGlobNoMatch)
+const globModules: Record<string, any> = import.meta.glob('../../content/posts/*.md', { eager: true });
+
+function formatDate(value: any): string {
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return String(value ?? '');
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+const entries = Object.values(globModules)
+  .map((file: any) => ({
+    date: formatDate(file.frontmatter.date),
+    dateValue: new Date(file.frontmatter.date).getTime(),
+    title: file.frontmatter.title,
+    cover: file.frontmatter.cover,
+    excerpt: file.frontmatter.excerpt,
+    url: file.frontmatter.url,
+  }))
+  .sort((a, b) => a.dateValue - b.dateValue);
 ---
 
 <BaseLayout title="实践过程记录" description="和音滇韵实践团实践过程记录">
   <section class="section diary-page">
     <div class="container">
       <h2 class="section-title">实践过程记录</h2>
-      <p class="diary-intro">从抵达澜沧的第一天到告别演出，十四天的每一个瞬间都值得铭记。</p>
-      <div class="diary-empty">
-        <p>暂无记录，敬请期待。</p>
-      </div>
+      <p class="diary-intro">我们以图文推文记录这段旅程，点击卡片即可阅读微信公众号原文。</p>
+      {entries.length === 0 ? (
+        <div class="diary-empty">
+          <p>暂无推文记录，敬请期待。</p>
+        </div>
+      ) : (
+        <PostTimeline entries={entries} />
+      )}
     </div>
   </section>
 </BaseLayout>

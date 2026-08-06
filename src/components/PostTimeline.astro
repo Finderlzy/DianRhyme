@@ -1,0 +1,168 @@
+---
+export interface PostEntry {
+  date: string;
+  title: string;
+  cover?: string;
+  excerpt?: string;
+  url: string;
+}
+
+const { entries = [] } = Astro.props as { entries: PostEntry[] };
+---
+
+{entries.length > 0 && (
+  <div class="post-timeline">
+    {entries.map((post) => (
+      <a
+        class="post-card"
+        href={post.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {post.cover ? (
+          <div class="post-cover">
+            <img src={post.cover} alt={post.title} loading="lazy" />
+          </div>
+        ) : (
+          <div class="post-cover post-cover-placeholder">
+            <span class="post-cover-icon">🎵</span>
+          </div>
+        )}
+        <div class="post-body">
+          <span class="post-date">{post.date}</span>
+          <h3 class="post-title">{post.title}</h3>
+          {post.excerpt && <p class="post-excerpt">{post.excerpt}</p>}
+          <span class="post-more">
+            阅读全文
+            <span class="post-more-arrow">→</span>
+          </span>
+        </div>
+      </a>
+    ))}
+  </div>
+)}
+
+<style>
+  .post-timeline {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .post-card {
+    display: flex;
+    align-items: stretch;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .post-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary-light);
+    transform: translateY(-2px);
+  }
+
+  .post-cover {
+    width: 200px;
+    min-height: 140px;
+    flex-shrink: 0;
+    background: var(--color-bg);
+  }
+
+  .post-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .post-cover-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent-light));
+  }
+
+  .post-cover-icon {
+    font-size: 2rem;
+    opacity: 0.7;
+  }
+
+  .post-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 24px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .post-date {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .post-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  .post-excerpt {
+    font-size: 0.95rem;
+    color: var(--color-text-light);
+    line-height: 1.7;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-more {
+    margin-top: auto;
+    padding-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .post-more-arrow {
+    transition: transform 0.3s ease;
+  }
+
+  .post-card:hover .post-more-arrow {
+    transform: translateX(4px);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 600px) {
+    .post-card {
+      flex-direction: column;
+    }
+
+    .post-cover,
+    .post-cover-placeholder {
+      width: 100%;
+      height: 180px;
+      min-height: 0;
+    }
+
+    .post-body {
+      padding: 16px 20px;
+    }
+  }
+</style>
