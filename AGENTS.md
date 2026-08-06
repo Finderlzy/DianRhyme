@@ -29,11 +29,11 @@
 
 | 文件 | 控制内容 |
 |------|---------|
-| `content/diaries/day*.md` | 实践日记（增删 = 创建/删除 .md 文件）—— **唯一被页面读取的内容** |
+| `content/posts/*.md` | 实践过程记录推文（改版中；落地后增删 = 创建/删除 .md 文件） |
 
 ⚠️ `content/overview.md`、`content/team.md` **未被任何页面读取**。首页"关于这次实践"正文和团队数据全部硬编码在 `src/pages/index.astro`，改这两个 .md 文件不会影响页面。
 
-日记 `.md` 文件**必须**包含 frontmatter 字段：`day`、`date`、`title`，缺失会导致构建失败。`day` 必须是**无引号的数字**（`diary.astro:15` 用 `a.day - b.day` 排序，字符串会静默排序错乱）。
+推文 `.md` 文件**必须**包含 frontmatter 字段：`date`、`title`、`cover`、`excerpt`、`url`，缺失会导致构建失败。`date` 为发布日期（排序依据），不包含 `day` 字段，页面不显示"Day N"标签。`cover` 写 `/DianRhyme/images/...`。
 
 ## 添加媒体
 
@@ -47,9 +47,9 @@
 ```
 src/pages/        — 3 个页面文件（index、diary、gallery）
 src/layouts/      — BaseLayout.astro（导航 + 页脚布局）
-src/components/   — NavBar、Footer、DiaryTimeline、GalleryTimeline、Lightbox、InfoCard、TeamCard
+src/components/   — NavBar、Footer、GalleryTimeline、Lightbox、InfoCard、TeamCard
 src/styles/       — global.css（CSS 变量、暖色调主题）
-content/          — 可编辑 Markdown（diaries/、overview.md、team.md）
+content/          — 可编辑 Markdown（posts/、overview.md、team.md）
 public/images/     — 图片资源
 public/videos/     — 视频资源
 docs/superpowers/specs/ — 设计文档（按日期命名）
@@ -59,7 +59,7 @@ docs/changelog.md  — 开发记录
 ## 常见陷阱
 
 - 忘记加 `/DianRhyme/` 前缀 → 部署后资源 404
-- 日记 frontmatter 缺少字段 → 构建报错
+- 推文 frontmatter 缺少字段 → 构建报错
 - `Astro.glob` 相对路径写错 → `AstroGlobNoMatch` 错误
 - `npm run dev` 的地址是 `localhost:4321/DianRhyme/`（含 base），不是 `localhost:4321/`
 - PowerShell 中直接 `npm run dev` 会因执行策略失败 → 先运行 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`

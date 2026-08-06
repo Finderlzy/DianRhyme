@@ -1,19 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import DiaryTimeline from '../components/DiaryTimeline.astro';
-
-// Import all diary markdown files (use import.meta.glob to avoid AstroGlobNoMatch error when dir is empty)
-const globModules: Record<string, any> = import.meta.glob('../../content/diaries/*.md', { eager: true });
-const diaryFiles = Object.values(globModules);
-
-const entries = diaryFiles
-  .map((file: any) => ({
-    day: file.frontmatter.day,
-    date: file.frontmatter.date,
-    title: file.frontmatter.title,
-    content: file.compiledContent(),
-  }))
-  .sort((a, b) => a.day - b.day);
 ---
 
 <BaseLayout title="实践过程记录" description="和音滇韵实践团实践过程记录">
@@ -21,13 +7,9 @@ const entries = diaryFiles
     <div class="container">
       <h2 class="section-title">实践过程记录</h2>
       <p class="diary-intro">从抵达澜沧的第一天到告别演出，十四天的每一个瞬间都值得铭记。</p>
-      {entries.length === 0 ? (
-        <div class="diary-empty">
-          <p>暂无日记记录，敬请期待。</p>
-        </div>
-      ) : (
-        <DiaryTimeline entries={entries} />
-      )}
+      <div class="diary-empty">
+        <p>暂无记录，敬请期待。</p>
+      </div>
     </div>
   </section>
 </BaseLayout>
