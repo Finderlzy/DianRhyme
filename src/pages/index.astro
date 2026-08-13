@@ -105,6 +105,7 @@ const teamRows = [
   <!-- Overview Section -->
   <section class="section overview">
     <div class="container">
+      <p class="section-kicker">概览</p>
       <h2 class="section-title">实践概况</h2>
       <div class="info-grid">
         {infoItems.map((item) => (
@@ -117,9 +118,10 @@ const teamRows = [
   <!-- About Section -->
   <section class="section about">
     <div class="container">
+      <p class="section-kicker">缘起</p>
       <h2 class="section-title">关于这次实践</h2>
       <div class="about-text">
-        <p>2026 年盛夏，我们——北科大"酉良和音滇韵民族团结实践团"的 9 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 14 天的音乐支教活动。</p>
+        <p class="about-lead">2026 年盛夏，我们——北科大"酉良和音滇韵民族团结实践团"的 9 名成员，跨越千里来到云南省澜沧拉祜族自治县，在澜沧县特殊教育学校开展了为期 14 天的音乐支教活动。</p>
         <p>澜沧，这座西南边陲的小城，毗邻缅甸，山高水远。这里的孩子许多是留守儿童，他们纯真的眼睛里藏着对音乐的渴望，却少有接触正规音乐教育的机会。</p>
         <p>我们以"情暖童心"公益托管班为平台，从最基础的简谱、节奏教起，带着孩子们学习发声方法，排练合唱曲目——《萱草花》的温柔、《大鱼》的辽阔、《如愿》的深情、《保卫黄河》的豪迈。我们还融入了多民族音乐元素，让音乐成为民族文化交融的桥梁。</p>
         <p>14 天很短，但音乐播下的种子会生根发芽。我们用镜头和文字记录下这段旅程，愿你在这里看见我们的故事。</p>
@@ -130,6 +132,7 @@ const teamRows = [
   <!-- Team Section -->
   <section class="section team">
     <div class="container">
+      <p class="section-kicker">同行</p>
       <h2 class="section-title">团队成员</h2>
       {teamRows.map((row) => (
         <div class="team-row">
@@ -159,6 +162,7 @@ const teamRows = [
     margin: 0 auto;
     padding: 80px 24px 64px;
     min-height: calc(100vh - var(--nav-height) - 80px);
+    min-height: calc(100dvh - var(--nav-height) - 80px);
   }
 
   .hero-content {
@@ -168,7 +172,7 @@ const teamRows = [
 
   .hero-eyebrow {
     font-size: 0.9rem;
-    color: var(--color-accent);
+    color: var(--color-primary-dark);
     font-weight: 500;
     letter-spacing: 0.08em;
     margin-bottom: 16px;
@@ -184,6 +188,8 @@ const teamRows = [
     display: flex;
     align-items: center;
     gap: 16px;
+    text-wrap: balance;
+    text-shadow: 0 2px 28px rgba(232, 146, 58, 0.28);
   }
 
   .hero-subtitle {
@@ -195,6 +201,17 @@ const teamRows = [
   .hero-image {
     flex: 1;
     max-width: 520px;
+    position: relative;
+  }
+
+  .hero-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translate(14px, 14px);
+    border: 1px solid var(--color-primary-light);
+    border-radius: var(--radius-lg);
+    z-index: -1;
   }
 
   .hero-image img {
@@ -204,13 +221,17 @@ const teamRows = [
     border-radius: var(--radius-lg);
   }
 
-  /* ===== Info Grid ===== */
+  /* ===== Info 无边框信息栏 ===== */
   .info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    max-width: 800px;
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 960px;
     margin: 0 auto;
+  }
+
+  .info-grid > *:first-child {
+    border-left: none;
+    padding-left: 0;
   }
 
   /* ===== About ===== */
@@ -219,7 +240,7 @@ const teamRows = [
   }
 
   .about-text {
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
   }
 
@@ -229,6 +250,13 @@ const teamRows = [
     line-height: 2;
     margin-bottom: 20px;
     text-indent: 2em;
+  }
+
+  .about-text .about-lead {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--color-text);
+    line-height: 1.9;
   }
 
   .about-text p:last-child {
@@ -264,10 +292,6 @@ const teamRows = [
       font-size: 3rem;
     }
 
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
-
     .team-row {
       flex-wrap: wrap;
       gap: 16px;
@@ -277,6 +301,10 @@ const teamRows = [
   @media (max-width: 600px) {
     .hero-title {
       font-size: 2.2rem;
+    }
+
+    .hero-image::after {
+      transform: translate(8px, 8px);
     }
   }
 

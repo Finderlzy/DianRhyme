@@ -120,3 +120,113 @@ describe('PhotoNode animation (Phase 4)', () => {
     expect(dir.dot(toCamera)).toBeLessThan(-0.9);
   });
 });
+
+describe('PhotoNode bloom-on-ready (D010)', () => {
+  const INTRO_DURATION = 0.8;
+  const INTRO_MAX_DELAY = 0.35;
+
+  function deferredLoader(): {
+    promise: Promise<THREE.Texture>;
+    resolve: (t: THREE.Texture) => void;
+    reject: () => void;
+  } {
+    let resolve!: (t: THREE.Texture) => void;
+    let reject!: () => void;
+    const promise = new Promise<THREE.Texture>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  }
+
+  function makeNode(options: {
+    reducedMotion?: boolean;
+    loader?: (src: string) => THREE.Texture | Promise<THREE.Texture>;
+  } = {}) {
+    return new PhotoNode(
+      { id: 'x', src: 'images/x.jpg' },
+      { x: 0, y: 0, z: 0 },
+      { textureLoader: options.loader, reducedMotion: options.reducedMotion },
+    );
+  }
+
+  it('sync-ready texture (default loader) shows immediately at scale 1', () => {
+    const node = makeNode();
+    expect(node.mesh.scale.x).toBe(1);
+  });
+
+  it('async-ready texture starts hidden and blooms to scale 1 once resolved', async () => {
+    const d = deferredLoader();
+    const node = makeNode({ loader: () => d.promise });
+    expect(node.mesh.scale.x).toBe(0);
+
+    d.resolve(new THREE.Texture());
+    await Promise.resolve(); // 让 then 处理器执行
+    expect(node.mesh.scale.x).toBe(0); // 已触发绽放,但尚未推进
+
+    const until = INTRO_DURATION + INTRO_MAX_DELAY + 0.2;
+    for (let s = 0; s <= until; s += 0.05) {
+      node.update(0.016, s);
+    }
+    expect(node.mesh.scale.x).toBe(1);
+  });
+
+  it('easeOutBack overshoots past 1 before settling', async () => {
+    const d = deferredLoader();
+    const node = makeNode({ loader: () => d.promise });
+    d.resolve(new THREE.Texture());
+    await Promise.resolve();
+
+    let maxSeen = 0;
+    for (let s = 0; s <= 2; s += 0.02) {
+      node.update(0.016, s);
+      expect(node.mesh.scale.x).toBeGreaterThanOrEqual(0);
+      maxSeen = Math.max(maxSeen, node.mesh.scale.x);
+    }
+    expect(node.mesh.scale.x).toBe(1);
+    expect(maxSeen).toBeGreaterThan(1);
+  });
+
+  it('failed async texture still blooms (placeholder shows)', async () => {
+    const d = deferredLoader();
+    const node = makeNode({ loader: () => d.promise });
+    expect(node.mesh.scale.x).toBe(0);
+
+    d.reject();
+    await Promise.resolve();
+    expect(node.mesh.scale.x).toBe(0);
+
+    const until = INTRO_DURATION + INTRO_MAX_DELAY + 0.2;
+    for (let s = 0; s <= until; s += 0.05) {
+      node.update(0.016, s);
+    }
+    expect(node.mesh.scale.x).toBe(1);
+  });
+
+  it('reducedMotion skips the bloom and shows the photo once ready', async () => {
+    const d = deferredLoader();
+    const node = makeNode({ reducedMotion: true, loader: () => d.promise });
+    expect(node.mesh.scale.x).toBe(0);
+
+    d.resolve(new THREE.Texture());
+    await Promise.resolve();
+    expect(node.mesh.scale.x).toBe(1);
+
+    node.update(0.016, 1);
+    expect(node.mesh.scale.x).toBe(1);
+  });
+
+  it('forceReady blooms a node whose texture stays pending', () => {
+    const d = deferredLoader();
+    const node = makeNode({ loader: () => d.promise });
+    expect(node.mesh.scale.x).toBe(0);
+    node.forceReady();
+    node.forceReady(); // 幂等
+
+    const until = INTRO_DURATION + INTRO_MAX_DELAY + 0.2;
+    for (let s = 0; s <= until; s += 0.05) {
+      node.update(0.016, s);
+    }
+    expect(node.mesh.scale.x).toBe(1);
+  });
+});

@@ -23,7 +23,7 @@ const links = [
         const isActive = currentPath === pagePath || currentPath === (base + link.href);
         return (
           <li>
-            <a href={fullHref} class={isActive ? 'active' : ''}>
+            <a href={fullHref} class={isActive ? 'active' : ''} aria-current={isActive ? 'page' : undefined}>
               {link.label}
             </a>
           </li>

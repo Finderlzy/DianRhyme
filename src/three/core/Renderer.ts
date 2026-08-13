@@ -2,6 +2,7 @@ import type * as THREE from 'three';
 
 export interface WebGLRendererLike {
   setSize(width: number, height: number): void;
+  setPixelRatio?(ratio: number): void;
   render(scene: THREE.Scene, camera: THREE.Camera): void;
   domElement: HTMLElement;
   dispose?(): void;
@@ -19,6 +20,7 @@ export class Renderer {
   constructor(
     private camera: THREE.PerspectiveCamera,
     private renderer: WebGLRendererLike,
+    private pixelRatio?: number,
   ) {
     this.domElement = renderer.domElement;
     this.domElement.style.width = '100%';
@@ -40,6 +42,9 @@ export class Renderer {
   }
 
   resize(width: number, height: number): void {
+    if (this.pixelRatio !== undefined && this.renderer.setPixelRatio) {
+      this.renderer.setPixelRatio(this.pixelRatio);
+    }
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();

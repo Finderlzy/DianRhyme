@@ -8,8 +8,8 @@
   --color-text: #3D3228;
   --color-text-light: #7A6E62;
   --color-text-muted: #B0A59A;
-  --color-accent: #7BA587;
-  --color-accent-light: #A8C9B0;
+  --color-accent: #A98454;
+  --color-accent-light: #D8C09A;
   --color-border: #E8DDD0;
   --color-card-shadow: rgba(61, 50, 40, 0.06);
 
@@ -42,9 +42,22 @@ html {
 body {
   font-family: var(--font-body);
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(232, 146, 58, 0.06), transparent 60%),
+    var(--color-bg);
   line-height: 1.75;
   font-size: 16px;
+}
+
+/* 细颗粒噪点：打破米白页面的扁平感，暗色页（moments）上几乎不可见 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -52,6 +65,11 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 a {
@@ -61,7 +79,17 @@ a {
 }
 
 a:hover {
-  color: var(--color-accent);
+  color: var(--color-primary);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button:active {
+  transform: scale(0.98);
 }
 
 img {
@@ -103,14 +131,39 @@ button {
 }
 
 .section {
-  padding: 80px 0;
+  padding: 72px 0 96px;
+}
+
+.section-kicker {
+  font-size: 0.8rem;
+  color: var(--color-primary-dark);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
 }
 
 .section-title {
   font-size: 2rem;
-  text-align: center;
-  margin-bottom: 48px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: -0.01em;
+  margin-bottom: 40px;
   color: var(--color-text);
+}
+
+.section-title::before {
+  content: "";
+  width: 28px;
+  height: 3px;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ===== 工具类 ===== */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== View Transitions ===== */

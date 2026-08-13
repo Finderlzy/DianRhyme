@@ -1,22 +1,34 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { moments } from '../data/moments';
 ---
 
 <BaseLayout title="精彩瞬间" description="探索我们的滇行记忆">
   <div id="universe-canvas" class="universe-canvas"></div>
   <div class="atmosphere" aria-hidden="true"></div>
 
-  <div id="guide" class="guide">探索我们的滇行记忆</div>
+  {moments.length === 0 ? (
+    <div class="empty-state">
+      <p class="empty-state-title">这里还没有照片</p>
+      <p class="empty-state-desc">精彩瞬间正在整理中，先回首页看看吧。</p>
+      <a class="empty-state-link" href={import.meta.env.BASE_URL}>返回首页</a>
+    </div>
+  ) : (
+    <>
+      <div id="guide" class="guide">探索我们的滇行记忆</div>
 
-  <figure id="caption" class="caption is-hidden" aria-live="polite">
-    <div class="caption-rule" aria-hidden="true"></div>
-    <figcaption class="caption-title" id="caption-title"></figcaption>
-    <p class="caption-meta" id="caption-meta"></p>
-    <p class="caption-desc" id="caption-desc"></p>
-  </figure>
+      <figure id="caption" class="caption is-hidden" aria-live="polite">
+        <div class="caption-rule" aria-hidden="true"></div>
+        <figcaption class="caption-title" id="caption-title"></figcaption>
+        <p class="caption-meta" id="caption-meta"></p>
+        <p class="caption-desc" id="caption-desc"></p>
+      </figure>
 
-  <p id="hint" class="hint is-hidden">拖动旋转 · 滚轮缩放 · 点击照片查看</p>
-  <button id="back-btn" class="back-btn is-hidden" type="button">返回探索</button>
+      <p id="hint" class="hint is-hidden">拖动旋转 · 滚轮缩放 · 点击查看</p>
+      <button id="back-btn" class="back-btn is-hidden" type="button">返回探索</button>
+      <p id="loading" class="loading is-hidden" aria-hidden="true">正在点亮记忆…</p>
+    </>
+  )}
 </BaseLayout>
 
 <script>
@@ -26,8 +38,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const caption = document.getElementById('caption');
   const hint = document.getElementById('hint');
   const backBtn = document.getElementById('back-btn');
+  const loading = document.getElementById('loading');
   if (container) {
-    initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton: backBtn });
+    initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton: backBtn, loadingElement: loading });
   }
 </script>
 
@@ -40,7 +53,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   body {
     overflow: hidden;
-    background: #1a120b;
+    background: #35291e;
   }
 
   /* 暖光中心 + 暗角,强化"记忆相册"的沉浸氛围 */
@@ -51,10 +64,51 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     pointer-events: none;
     background: radial-gradient(
       ellipse 72% 68% at 50% 46%,
-      rgba(255, 170, 102, 0.07) 0%,
+      rgba(255, 170, 102, 0.12) 0%,
       rgba(255, 170, 102, 0) 48%,
-      rgba(12, 8, 5, 0.5) 100%
+      rgba(53, 41, 30, 0.2) 100%
     );
+  }
+
+  /* ===== 空态 ===== */
+  .empty-state {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    color: rgba(255, 233, 205, 0.92);
+    text-align: center;
+  }
+
+  .empty-state-title {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    letter-spacing: 0.12em;
+  }
+
+  .empty-state-desc {
+    font-size: 0.95rem;
+    color: rgba(255, 233, 205, 0.6);
+  }
+
+  .empty-state-link {
+    margin-top: 12px;
+    padding: 10px 26px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    color: rgba(255, 235, 210, 0.92);
+    background: rgba(232, 146, 58, 0.35);
+    border: 1px solid rgba(232, 146, 58, 0.45);
+    transition: background 0.2s ease;
+  }
+
+  .empty-state-link:hover {
+    background: rgba(232, 146, 58, 0.55);
   }
 
   /* ===== 进场引导 ===== */
@@ -99,7 +153,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     max-width: 340px;
     margin: 0;
     padding: 16px 20px 18px;
-    background: rgba(20, 14, 9, 0.72);
+    background: rgba(43, 32, 24, 0.82);
     border: 1px solid rgba(232, 146, 58, 0.22);
     border-radius: 12px;
     backdrop-filter: blur(10px);
@@ -169,7 +223,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     border-radius: 999px;
     font-size: 0.95rem;
     color: rgba(255, 235, 210, 0.92);
-    background: rgba(26, 18, 11, 0.55);
+    background: rgba(43, 32, 24, 0.68);
     border: 1px solid rgba(232, 146, 58, 0.35);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -190,6 +244,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     pointer-events: none;
   }
 
+  /* ===== 加载指示 ===== */
+  .loading {
+    position: fixed;
+    left: 50%;
+    bottom: 36px;
+    transform: translateX(-50%);
+    z-index: 40;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: rgba(255, 233, 205, 0.55);
+    transition: opacity 0.35s ease-out;
+  }
+
+  .loading.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   @media (max-width: 600px) {
     .guide {
       font-size: 1.6rem;
@@ -201,17 +273,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       bottom: 16px;
       max-width: calc(100vw - 32px);
       padding: 14px 16px 16px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     }
 
     .hint {
       right: 16px;
       bottom: 20px;
       font-size: 0.72rem;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
+    /* 小屏下返回按钮移到右上角,避免与左下说明卡重叠 */
     .back-btn {
       right: 16px;
-      bottom: 16px;
+      top: calc(12px + env(safe-area-inset-top, 0px));
+      bottom: auto;
+      padding: 8px 16px;
+    }
+
+    .loading {
+      bottom: 20px;
     }
   }
 
@@ -219,7 +300,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .guide,
     .caption,
     .hint,
-    .back-btn {
+    .back-btn,
+    .loading {
       transition: none;
       animation: none;
     }

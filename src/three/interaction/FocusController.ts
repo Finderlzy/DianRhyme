@@ -16,9 +16,12 @@ export class FocusController {
   private readonly startPos = new THREE.Vector3();
   private readonly endPos = new THREE.Vector3();
   private readonly lookTarget = new THREE.Vector3();
+  private readonly focusDuration: number;
   private elapsed = 0;
 
-  constructor(private cameraManager: CameraManager) {}
+  constructor(private cameraManager: CameraManager, reducedMotion = false) {
+    this.focusDuration = reducedMotion ? 0.25 : FOCUS_DURATION;
+  }
 
   focusOn(node: PhotoNode): void {
     this.cameraManager.setState(UniverseState.FOCUSING);
@@ -48,7 +51,7 @@ export class FocusController {
     if (!this.animating) return;
     this.elapsed += deltaTime;
 
-    const t = Math.min(this.elapsed / FOCUS_DURATION, 1);
+    const t = Math.min(this.elapsed / this.focusDuration, 1);
     const eased = t * t * (3 - 2 * t); // smoothstep
     this.cameraManager.getCamera().position.lerpVectors(this.startPos, this.endPos, eased);
     this.cameraManager.getCamera().lookAt(this.lookTarget);

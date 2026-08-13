@@ -61,4 +61,34 @@ describe('Renderer', () => {
     renderer.dispose();
     expect(fake.disposed).toBe(true);
   });
+
+  it('applies pixelRatio before setSize when provided', () => {
+    const camera = new THREE.PerspectiveCamera();
+    const fake = makeFakeWebGL() as ReturnType<typeof makeFakeWebGL> & { setPixelRatio: (r: number) => void; ratios: number[] };
+    fake.ratios = [];
+    fake.setPixelRatio = (r: number) => {
+      fake.ratios.push(r);
+    };
+    const renderer = new Renderer(camera, fake, 2);
+    renderer.resize(1920, 1080);
+    expect(fake.ratios).toEqual([2]);
+    expect(fake.sizes).toContainEqual([1920, 1080]);
+  });
+
+  it('does not call setPixelRatio when pixelRatio is undefined', () => {
+    const fake = makeFakeWebGL() as ReturnType<typeof makeFakeWebGL> & { setPixelRatio: (r: number) => void; ratios: number[] };
+    fake.ratios = [];
+    fake.setPixelRatio = (r: number) => {
+      fake.ratios.push(r);
+    };
+    const renderer = new Renderer(new THREE.PerspectiveCamera(), fake);
+    renderer.resize(800, 600);
+    expect(fake.ratios).toEqual([]);
+  });
+
+  it('does not call setPixelRatio when the renderer lacks the method', () => {
+    const fake = makeFakeWebGL();
+    const renderer = new Renderer(new THREE.PerspectiveCamera(), fake, 2);
+    expect(() => renderer.resize(800, 600)).not.toThrow();
+  });
 });

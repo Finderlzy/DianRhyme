@@ -9,6 +9,11 @@ export interface Props {
 }
 
 const { title, description } = Astro.props;
+
+const siteUrl = new URL(import.meta.env.BASE_URL, Astro.site).toString();
+const ogImage = siteUrl + 'images/team-photo.jpg';
+const fullTitle = `${title} — 和音滇韵`;
+const metaDescription = description || '北京科技大学"酉良和音滇韵民族团结实践团" — 音乐支教成果展示';
 ---
 
 <!doctype html>
@@ -16,15 +21,22 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description || '北京科技大学"酉良和音滇韵民族团结实践团" — 音乐支教成果展示'} />
-    <title>{title} — 和音滇韵</title>
+    <meta name="description" content={metaDescription} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/jpeg" href={import.meta.env.BASE_URL + 'images/logo.jpg'} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <a href="#main" class="skip-link">跳到主要内容</a>
     <NavBar />
-    <main>
+    <main id="main">
       <slot />
     </main>
     <Footer />
@@ -34,6 +46,24 @@ const { title, description } = Astro.props;
 <style is:global>
   main {
     min-height: calc(100vh - var(--nav-height) - 200px);
+    min-height: calc(100dvh - var(--nav-height) - 200px);
     padding-top: var(--nav-height);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.95rem;
+    z-index: 999;
+  }
+
+  .skip-link:focus-visible {
+    left: 12px;
+    top: 12px;
   }
 </style>

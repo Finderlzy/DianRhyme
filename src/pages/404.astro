@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="页面未找到" description="页面不存在或已被移动，返回和音滇韵首页">
+  <section class="nf">
+    <p class="nf-symbol" aria-hidden="true">♪</p>
+    <p class="nf-code">404</p>
+    <h1 class="nf-title">页面走丢了</h1>
+    <p class="nf-desc">你访问的地址不存在，可能已被移动或删除。回到首页，继续聆听这段滇韵和声。</p>
+    <div class="nf-actions">
+      <a class="nf-btn nf-btn--primary" href={base}>返回首页</a>
+      <a class="nf-btn" href={base + 'diary'}>实践过程记录</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--nav-height) - 120px);
+    min-height: calc(100dvh - var(--nav-height) - 120px);
+    text-align: center;
+    padding: 40px 24px;
+  }
+
+  .nf-symbol {
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--color-primary);
+    margin-bottom: 16px;
+    animation: nf-float 3s ease-in-out infinite;
+  }
+
+  .nf-code {
+    font-family: var(--font-heading);
+    font-size: 5.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-text);
+    letter-spacing: 0.04em;
+  }
+
+  .nf-title {
+    font-size: 1.6rem;
+    color: var(--color-text);
+    margin: 20px 0 12px;
+  }
+
+  .nf-desc {
+    max-width: 440px;
+    color: var(--color-text-light);
+    line-height: 1.8;
+    margin-bottom: 32px;
+  }
+
+  .nf-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nf-btn {
+    padding: 11px 28px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-light);
+    transition: all 0.2s ease;
+  }
+
+  .nf-btn:hover {
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary-light);
+    background: rgba(232, 146, 58, 0.06);
+  }
+
+  .nf-btn--primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+
+  .nf-btn--primary:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #fff;
+  }
+
+  @keyframes nf-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nf-symbol {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .nf-code {
+      font-size: 4rem;
+    }
+  }
+</style>

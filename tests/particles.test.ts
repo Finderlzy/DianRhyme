@@ -31,6 +31,34 @@ describe('Particles', () => {
     const after = arr.slice(0, 6);
     expect(after.some((v, i) => Math.abs(v - before[i]) > 1e-6)).toBe(true);
   });
+
+  it('uses additive blending with per-vertex colors and size 0.07', () => {
+    const points = Particles.create(10, bounds);
+    const mat = points.material as THREE.PointsMaterial;
+    expect(mat.blending).toBe(THREE.AdditiveBlending);
+    expect(mat.vertexColors).toBe(true);
+    expect(mat.size).toBe(0.07);
+    expect(mat.transparent).toBe(true);
+    expect(mat.depthWrite).toBe(false);
+  });
+
+  it('provides a color attribute matching position count', () => {
+    const points = Particles.create(64, bounds);
+    const colorAttr = points.geometry.getAttribute('color');
+    const posAttr = points.geometry.getAttribute('position');
+    expect(colorAttr).toBeTruthy();
+    expect(colorAttr.count).toBe(posAttr.count);
+    expect(colorAttr.itemSize).toBe(3);
+  });
+
+  it('update breathes opacity within [0.50, 0.80]', () => {
+    const points = Particles.create(10, bounds);
+    const mat = points.material as THREE.PointsMaterial;
+    Particles.update(points, 0.016);
+    Particles.update(points, 0.016);
+    expect(mat.opacity).toBeGreaterThanOrEqual(0.5);
+    expect(mat.opacity).toBeLessThanOrEqual(0.8);
+  });
 });
 
 describe('Atmosphere', () => {

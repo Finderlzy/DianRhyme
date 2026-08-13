@@ -190,6 +190,11 @@
   },
   "active": "b014927ab718ab9c",
   "lastOpenFiles": [
+    "tests/scaled-texture.test.ts",
+    "tests/device-tier.test.ts",
+    "src/three/utils/LoadScaledTexture.ts",
+    "src/three/utils/DeviceTier.ts",
+    "docs/superpowers/specs/2026-08-13-moments-quality-plan.md",
     "dist/manifest_BRRLabNW.mjs",
     "dist/renderers.mjs",
     "dist/_noop-middleware.mjs",
@@ -197,10 +202,6 @@
     "dist/chunks/BaseLayout_BTv-jvkC.mjs",
     "dist/chunks/astro_B847JQmx.mjs",
     "dist/chunks/astro",
-    "dist/chunks",
-    "dist/pages/moments.astro.mjs",
-    "dist/pages/index.astro.mjs",
-    "dist/pages/diary.astro.mjs",
     "node_modules/@dimforge/rapier3d-compat/README.md",
     "node_modules/vitest/README.md",
     "node_modules/vitest/LICENSE.md",
@@ -224,7 +225,6 @@
     "node_modules/@types/chai/README.md",
     "node_modules/tinybench/README.md",
     "node_modules/@rolldown/binding-win32-x64-msvc/README.md",
-    "node_modules/pathe/README.md",
-    "node_modules/@oxc-project/types/README.md"
+    "node_modules/pathe/README.md"
   ]
 }

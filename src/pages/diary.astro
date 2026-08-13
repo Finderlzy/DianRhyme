@@ -29,6 +29,7 @@ const entries = Object.values(globModules)
 <BaseLayout title="实践过程记录" description="和音滇韵实践团实践过程记录">
   <section class="section diary-page">
     <div class="container">
+      <p class="section-kicker">过程</p>
       <h2 class="section-title">实践过程记录</h2>
       <p class="diary-intro">从抵达澜沧的第一天到告别演出，十四天的每一个瞬间都值得铭记。我们以推文记录这段旅程，点击卡片即可阅读微信公众号原文。</p>
       {entries.length === 0 ? (
@@ -48,11 +49,12 @@ const entries = Object.values(globModules)
   }
 
   .diary-intro {
-    text-align: center;
+    text-align: left;
     color: var(--color-text-light);
     font-size: 1rem;
     margin-bottom: 56px;
-    margin-top: -24px;
+    margin-top: -8px;
+    max-width: 640px;
   }
 
   .diary-empty {
