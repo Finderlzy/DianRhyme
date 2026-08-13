@@ -1,11 +1,13 @@
 # 和音滇韵
 
 <p align="center">
-  <img src="public/images/logo.jpg" alt="和音滇韵团队 Logo" width="180">
+  <img src="public/images/logo.jpg" alt="和音滇韵 · Lahu Music 团队标识" width="220">
 </p>
 
 > 北京科技大学"酉良和音滇韵民族团结实践团" · 音乐支教成果展示网页
  
+[![Deploy to GitHub Pages](https://github.com/Finderlzy/DianRhyme/actions/workflows/deploy.yml/badge.svg)](https://github.com/Finderlzy/DianRhyme/actions)
+
 十四个日夜，我们走进澜沧江畔的校园与村寨，用歌声、琴声和真诚的陪伴记录相遇，也记录音乐连接彼此的时光。
 
 ## 导语
