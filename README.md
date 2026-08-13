@@ -1,10 +1,24 @@
-# 和音滇韵
+<div align="center">
 
-> 以音乐为桥，连接京滇山海
+```
+██████╗ ██╗ █████╗ ███╗   ██╗██████╗ ██╗  ██╗██╗   ██╗███╗   ███╗███████╗
+██╔══██╗██║██╔══██╗████╗  ██║██╔══██╗██║  ██║╚██╗ ██╔╝████╗ ████║██╔════╝
+██║  ██║██║███████║██╔██╗ ██║██████╔╝███████║ ╚████╔╝ ██╔████╔██║█████╗
+██║  ██║██║██╔══██║██║╚██╗██║██╔══██╗██╔══██║  ╚██╔╝  ██║╚██╔╝██║██╔══╝
+██████╔╝██║██║  ██║██║ ╚████║██║  ██║██║  ██║   ██║   ██║ ╚═╝ ██║███████╗
+╚═════╝ ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝╚══════╝
+```
 
-**团队标识**：和音滇韵 · Lahu Music（北京科技大学“酉良和音滇韵民族团结实践团”）
- 
+**北京科技大学“酉良和音滇韵民族团结实践团”**
+
 [![Deploy to GitHub Pages](https://github.com/Finderlzy/DianRhyme/actions/workflows/deploy.yml/badge.svg)](https://github.com/Finderlzy/DianRhyme/actions)
+[![Site](https://img.shields.io/badge/在线访问-finderlzy.github.io/DianRhyme-blue)](https://finderlzy.github.io/DianRhyme/)
+![Astro](https://img.shields.io/badge/Astro-4.x-FF5D01?logo=astro&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-照片宇宙-000000?logo=three.js)
+
+</div>
+
+> 以音乐为桥，连接京滇山海。
 
 十四个日夜，我们走进澜沧江畔的校园与村寨，用歌声、琴声和真诚的陪伴记录相遇，也记录音乐连接彼此的时光。
 
