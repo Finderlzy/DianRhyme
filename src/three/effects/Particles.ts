@@ -16,8 +16,51 @@ const BASE_OPACITY = 0.65;
 const OPACITY_AMPLITUDE = 0.12;
 const BREATH_PERIOD_SECONDS = 4;
 
-const basePositions = new WeakMap<THREE.Points, Float32Array>();
-let elapsed = 0;
+const PARTICLE_SIZE = 0.07;
+const DEFAULT_VIEWPORT_HEIGHT = 1080;
+
+// 与旧 CPU 版本同源的漂移幅度(±0.5 / 0.4 / 0.5)与角速度(0.4 / 0.3 / 0.25)
+const DRIFT_X_AMPLITUDE = 0.5;
+const DRIFT_Y_AMPLITUDE = 0.4;
+const DRIFT_Z_AMPLITUDE = 0.5;
+
+// 相位由 position 伪随机哈希生成,不新增 attribute;GLSL ES 1.00 语法
+// 注意: position/normal/uv 由 three 前缀自动声明, 不得重复声明; color 需自行声明
+const VERTEX_SHADER = /* glsl */ `
+attribute vec3 color;
+
+uniform float uTime;
+uniform float uSize;
+uniform float uViewportHeight;
+
+varying vec3 vColor;
+
+void main() {
+  vec3 pos = position;
+  float phase = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.28318;
+  pos.x += sin(uTime * 0.4 + phase) * ${DRIFT_X_AMPLITUDE};
+  pos.y += sin(uTime * 0.3 + phase * 1.7) * ${DRIFT_Y_AMPLITUDE};
+  pos.z += cos(uTime * 0.25 + phase) * ${DRIFT_Z_AMPLITUDE};
+
+  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+  gl_PointSize = uSize * uViewportHeight * 0.5 * projectionMatrix[1][1] / -mvPosition.z;
+  gl_Position = projectionMatrix * mvPosition;
+  vColor = color;
+}
+`;
+
+const FRAGMENT_SHADER = /* glsl */ `
+uniform float uOpacity;
+
+varying vec3 vColor;
+
+void main() {
+  float d = length(gl_PointCoord - vec2(0.5));
+  if (d > 0.5) discard;
+  float alpha = smoothstep(0.5, 0.0, d) * uOpacity;
+  gl_FragColor = vec4(vColor, alpha);
+}
+`;
 
 export class Particles {
   static create(count: number, bounds: Bounds3): THREE.Points {
@@ -37,38 +80,34 @@ export class Particles {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const material = new THREE.PointsMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-      size: 0.07,
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uOpacity: { value: BASE_OPACITY },
+        uSize: { value: PARTICLE_SIZE },
+        uViewportHeight: { value: DEFAULT_VIEWPORT_HEIGHT },
+      },
+      vertexShader: VERTEX_SHADER,
+      fragmentShader: FRAGMENT_SHADER,
       transparent: true,
-      opacity: BASE_OPACITY,
       depthWrite: false,
+      depthTest: true,
       blending: THREE.AdditiveBlending,
     });
 
-    const points = new THREE.Points(geometry, material);
-    basePositions.set(points, positions.slice());
-    return points;
+    return new THREE.Points(geometry, material);
   }
 
   static update(points: THREE.Points, deltaTime: number): void {
-    elapsed += deltaTime;
-    const base = basePositions.get(points);
-    if (!base) return;
+    const uniforms = (points.material as THREE.ShaderMaterial).uniforms;
+    const t = (uniforms.uTime.value as number) + deltaTime;
+    uniforms.uTime.value = t;
+    uniforms.uOpacity.value =
+      BASE_OPACITY + OPACITY_AMPLITUDE * Math.sin((t * Math.PI * 2) / BREATH_PERIOD_SECONDS);
+  }
 
-    const material = points.material as THREE.PointsMaterial;
-    material.opacity = BASE_OPACITY + OPACITY_AMPLITUDE * Math.sin((elapsed * Math.PI * 2) / BREATH_PERIOD_SECONDS);
-
-    const attr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
-    const arr = attr.array as Float32Array;
-    for (let i = 0; i < attr.count; i++) {
-      const ix = i * 3;
-      const phase = (i * 12.9898) % (Math.PI * 2);
-      arr[ix] = base[ix] + Math.sin(elapsed * 0.4 + phase) * 0.5;
-      arr[ix + 1] = base[ix + 1] + Math.sin(elapsed * 0.3 + phase * 1.7) * 0.4;
-      arr[ix + 2] = base[ix + 2] + Math.cos(elapsed * 0.25 + phase) * 0.5;
-    }
-    attr.needsUpdate = true;
+  static syncViewport(points: THREE.Points, viewportHeight: number): void {
+    const uniforms = (points.material as THREE.ShaderMaterial).uniforms;
+    uniforms.uViewportHeight.value = viewportHeight;
   }
 }

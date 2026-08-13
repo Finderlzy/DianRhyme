@@ -8,6 +8,12 @@ export interface WebGLRendererLike {
   dispose?(): void;
 }
 
+export type PixelRatioSource = () => number;
+
+function defaultPixelRatioSource(): number {
+  return typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+}
+
 /**
  * WebGLRenderer 封装：负责挂载 canvas、响应 resize 并同步 camera 纵横比。
  * renderer 由外部注入（main.ts 创建真正的 WebGLRenderer），便于测试。
@@ -20,7 +26,8 @@ export class Renderer {
   constructor(
     private camera: THREE.PerspectiveCamera,
     private renderer: WebGLRendererLike,
-    private pixelRatio?: number,
+    private pixelRatioCap?: number,
+    private pixelRatioSource: PixelRatioSource = defaultPixelRatioSource,
   ) {
     this.domElement = renderer.domElement;
     this.domElement.style.width = '100%';
@@ -42,8 +49,9 @@ export class Renderer {
   }
 
   resize(width: number, height: number): void {
-    if (this.pixelRatio !== undefined && this.renderer.setPixelRatio) {
-      this.renderer.setPixelRatio(this.pixelRatio);
+    if (this.pixelRatioCap !== undefined && this.renderer.setPixelRatio) {
+      const dpr = Math.max(1, this.pixelRatioSource() || 1);
+      this.renderer.setPixelRatio(Math.min(dpr, this.pixelRatioCap));
     }
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;

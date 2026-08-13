@@ -62,17 +62,39 @@ describe('Renderer', () => {
     expect(fake.disposed).toBe(true);
   });
 
-  it('applies pixelRatio before setSize when provided', () => {
+  it('applies pixelRatio capped by the source DPR before setSize when provided', () => {
     const camera = new THREE.PerspectiveCamera();
     const fake = makeFakeWebGL() as ReturnType<typeof makeFakeWebGL> & { setPixelRatio: (r: number) => void; ratios: number[] };
     fake.ratios = [];
     fake.setPixelRatio = (r: number) => {
       fake.ratios.push(r);
     };
-    const renderer = new Renderer(camera, fake, 2);
+    const renderer = new Renderer(camera, fake, 2, () => 2);
     renderer.resize(1920, 1080);
     expect(fake.ratios).toEqual([2]);
     expect(fake.sizes).toContainEqual([1920, 1080]);
+  });
+
+  it('uses the source DPR when it is below the cap', () => {
+    const fake = makeFakeWebGL() as ReturnType<typeof makeFakeWebGL> & { setPixelRatio: (r: number) => void; ratios: number[] };
+    fake.ratios = [];
+    fake.setPixelRatio = (r: number) => {
+      fake.ratios.push(r);
+    };
+    const renderer = new Renderer(new THREE.PerspectiveCamera(), fake, 2, () => 1);
+    renderer.resize(1920, 1080);
+    expect(fake.ratios).toEqual([1]);
+  });
+
+  it('caps the ratio at the cap when the source DPR exceeds it', () => {
+    const fake = makeFakeWebGL() as ReturnType<typeof makeFakeWebGL> & { setPixelRatio: (r: number) => void; ratios: number[] };
+    fake.ratios = [];
+    fake.setPixelRatio = (r: number) => {
+      fake.ratios.push(r);
+    };
+    const renderer = new Renderer(new THREE.PerspectiveCamera(), fake, 2, () => 3);
+    renderer.resize(800, 600);
+    expect(fake.ratios).toEqual([2]);
   });
 
   it('does not call setPixelRatio when pixelRatio is undefined', () => {

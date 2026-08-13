@@ -10,18 +10,20 @@
     
 - 核心交互设计；
     
-- Three.js 架构设计。
+- Three.js 架构设计；
     
+- Phase 1~8 工程实现（验收记录见下方"验收记录（Agent Execution Plan）"）。
 
 当前阶段：
 
-> 工程实现准备阶段。
+> 性能优化阶段。
 
 下一步：
 
-进入 Agent Plan 制定，然后开始编码。
-
----
+- 方案 1（像素比修正 + delta 钳制 + 标签页隐藏暂停）已完成并文档化（D026 / D027）；
+- 方案 2（粒子动画 GPU 着色器化）已完成并文档化（D029），含粒子消失 bug 修复（D030），浏览器已确认粒子恢复可见；
+- **D028（页面加载照片逐一浮现阶段卡顿）已修复**（D031）：`createImageBitmap` 离屏降采样 + 纹理上限 1024/768 + 并发队列限流（6 张/批），待浏览器/线上复验（拖动已流畅，绽放阶段预期不再掉帧）；
+- 候选：方案 3 自适应分辨率。
 
 # 项目快照
 
@@ -626,6 +628,175 @@ CameraManager 初始状态为 EXPLORING，进入页面时由 main.ts 显式 `set
 原因：
 
 行为等价——引导阶段（2 秒内）`controls.enabled = false` 仍成立（`camera-manager.test.ts:40` 已断言）；初始值 EXPLORING 使状态机默认中立，进入动画由页面引导显式触发，避免实例化即锁定。已二选一写死。
+
+---
+
+## D026
+
+Renderer 实际渲染像素比从"无条件 cap"改为 `min(devicePixelRatio, cap)`。
+
+文件：
+
+```
+src/three/core/Renderer.ts
+```
+
+说明：
+
+`resize()` 时 `setPixelRatio(Math.min(Math.max(1, dpr), cap))`；`dpr` 由可注入的 `pixelRatioSource()` 提供（默认读 `window.devicePixelRatio || 1`，node 测试环境返回 1），不引入 `window` 强依赖。`main.ts` 传参不变（`tier.pixelRatioCap` 桌面 2 / 移动 1.75 未动）。
+
+原因：
+
+DPR=1 屏幕（如 Windows 1080p）原被无条件拉到 2×（4 倍像素量）再降采样，纯为抗锯齿浪费填充率，是桌面整体掉帧的最大单一来源。已更新 `tests/renderer.test.ts` 注入 DPR=1/2/3 验证低值取 DPR、高值封顶。
+
+---
+
+## D027
+
+AnimationLoop 引入 delta 钳制与标签页隐藏暂停。
+
+文件：
+
+```
+src/three/core/AnimationLoop.ts
+```
+
+说明：
+
+- `MAX_DELTA = 0.05`，自持 `elapsed` 累加器，回调签名 `(delta, elapsed)` 不变，`main.ts` 无需改动；
+- `start()` 丢弃 clock 陈旧累积（`getDelta()` 一次），保证恢复后首帧 delta≈0，不跳变；
+- 监听 `document.visibilitychange`：隐藏→`stop()`，可见→`start()` 恢复；监听常驻（`visibilityBound` 守卫，仅绑定一次），`stop()` 语义为"暂停"而非销毁，故不移除监听，否则首次隐藏后无法恢复。
+
+原因：
+
+切标签/GC/DevTools 停顿后原始 delta 可达数百毫秒，粒子漂移、聚焦镜头 lerp、Orbit 阻尼随之跳变；隐藏期间循环空转浪费 CPU。node 无 DOM，已加 `typeof document !== 'undefined'` 守卫。
+
+---
+
+## D028
+
+性能优化方案 1 / 方案 2 落地后的遗留问题：**页面加载时照片逐一浮现阶段卡顿**。
+
+现象（用户实测定位，2026-08-13）：
+
+- 点击导航栏"精彩瞬间"跳转进入页面后，先出现引导文字"探寻我们的滇行记忆"——**不卡**；
+- 紧接着照片**一张一张浮现（bloom 绽放）时非常卡**；
+- 拖动旋转、滚轮缩放已流畅（方案 1 + 方案 2 生效）。
+
+结论：卡顿集中在"照片绽放动画 + 图片解码/纹理上传"的加载窗口期，而非渲染循环本身。
+
+假设：
+
+- 约 23 张图片经 `loadScaledImage` 的 `ctx.drawImage` 同步主线程降采样（`LoadScaledTexture.ts:70`），随后纹理上传 + mipmap 生成为一次性长任务，与绽放动画争抢主线程；
+- 绽放动画与图片就绪耦合（`PhotoNode` 逐个 `ready` 触发 `beginIntro`），每个 ready 都会推开新的纹理上传/着色；
+- 主线程被降采样 + 上传阻塞时，rAF 帧率骤降，叠加 `easeOutBack` 绽放动画显眼放大掉帧感。
+
+下一步（候选，未定方案）：
+
+- 图片加载分批/异步：`img.decode()` 异步解码、`requestIdleCallback` 调度降采样，避开主线程峰值；
+- bloom 动画与纹理上传解耦：先用占位缩放绽放，纹理就绪后替换，消除"上传 → 绽放"耦合长任务；
+- 降采样尺寸再收紧（移动端 1024 → 更低），减少 drawImage 耗时。
+
+状态：待下一轮优化讨论决策。
+
+---
+
+## D029
+
+粒子动画从 CPU 每帧循环改为 GPU 顶点着色器驱动（方案 2）。
+
+文件：
+
+```
+src/three/effects/Particles.ts
+src/three/main.ts
+tests/particles.test.ts
+```
+
+说明：
+
+- `PointsMaterial` → `ShaderMaterial`，uniforms `uTime / uOpacity / uSize / uViewportHeight`；
+- 位置漂移（±0.5 / 0.4 / 0.5，角速度 0.4 / 0.3 / 0.25）移入 vertex shader，相位由 position 伪随机哈希生成，不新增 attribute；
+- `gl_PointSize = uSize * uViewportHeight * 0.5 * projectionMatrix[1][1] / -mvPosition.z`，与原 `PointsMaterial size=0.07 + sizeAttenuation` 数学等价；
+- 片元着色器软圆点（`gl_PointCoord` + smoothstep）+ 呼吸透明度（`uOpacity ∈ [0.50, 0.80]`）；
+- 删除 `basePositions` WeakMap 与逐粒子 `needsUpdate` 整块 buffer 重传，每帧 CPU 开销近乎归零；
+- 新增 `Particles.syncViewport(points, viewportHeight)`，`main.ts` 渲染循环内传 `gl.domElement.height`（drawing buffer 高，含 DPR，自动跟随 resize）。
+
+原因：
+
+550 粒子 × 3 轴 sin/cos 约 1650 次/帧 + 1650 float buffer 上传是每帧最大 CPU 固定开销，GPU 化后完全卸载。
+
+---
+
+## D030
+
+three.js ShaderMaterial 前缀自动声明 `attribute vec3 position;`，不得在用户 shader 中重复声明。
+
+现象：
+
+方案 2 首次落地后**所有粒子消失**（照片正常）。原因：`WebGLProgram.js:623` 为 ShaderMaterial（非 RawShaderMaterial）注入 `attribute vec3 position;`（WebGL2 下经 `#define attribute in` 转成 `in vec3 position;`），自定义 vertex shader 再声明同名 attribute → GLSL 重复定义 → 编译失败 → 整个粒子材质被跳过。
+
+修复：
+
+- `Particles.ts` vertex shader 删除 `attribute vec3 position;`，保留 `attribute vec3 color;`（前缀仅在 `USE_COLOR` 下声明 color，ShaderMaterial 默认不定义，必须自行声明）；
+- 新增回归测试：断言 vertex shader 不含 `position/normal/uv` 重复声明、含 `color` 声明；
+- 浏览器复验：粒子恢复可见，尺寸与原版一致。
+
+教训：自定义 ShaderMaterial 时 position/normal/uv 由 three 提供，直接使用；仅需声明 three 未覆盖的 attribute/uniform。
+
+---
+
+## D031
+
+"页面加载时照片逐一浮现阶段卡顿"（D028）根因与修复——加载/绽放窗口期去卡顿（三件套）。
+
+现象（用户实测）：点导航进入"精彩瞬间"→ 引导文字阶段不卡 → 照片一张一张 bloom 绽放时**非常卡**，每张浮现都伴随一次明显掉帧。
+
+根因：
+
+- moments 页实际加载 **35 张图**，其中约 20 张边长 >2000px，多张高达 8192×4608 / 8064×6048 / 6000×3376、单张 10-13MB（实测 `public/images/` 各图尺寸）；
+- 旧路径 `loadScaledImage`（`LoadScaledTexture.ts:70`）在**主线程** `ctx.drawImage` 同步降采样，8000×6000→2048 每张数十 ms；
+- `CanvasTexture needsUpdate` + **bloom 与纹理就绪强耦合**（`PhotoNode.beginIntro` 在 fireReady 时触发）：每张照片浮现的那一帧恰好撞上它自己的重降采样 + 纹理上传 + mipmap 生成 → 一帧一个卡点；
+- 35 张图**同步全部发起**下载/解码，多张大图几乎同时下完 → 一串 drawImage 长任务排队 → rAF 饿死 → 掉帧；
+- 2048 目标对实际显示尺寸（探索 ~200px、聚焦 ~830px）严重过剩。
+
+修复（三件套，文件见下）：
+
+1. **降采样移出主线程**：`loadImageBitmap` 用 `fetch → blob → createImageBitmap(blob, { resizeWidth/Height, resizeQuality:'high' })`，解码+缩放全在浏览器 worker 完成，主线程零 drawImage；超大图先解码取尺寸、再二次离屏缩放，原 canvas 路径（`loadScaledImage`）保留为兜底（`createImageBitmap`/`fetch` 不可用或失败时回退）；
+2. **纹理上限收紧**：桌面 `maxTextureEdge` 2048→**1024**、移动 1024→**768**（聚焦视角 ~830px，1024 足够；移动聚焦 ~168px，768 富余），上传/mipmap/显存降为 ~1/4；
+3. **加载并发限流**：`createPacedTextureLoader` 带并发上限的异步队列（`main.ts` 用 `LOAD_CONCURRENCY=6`），消除大图集中突发，照片更均匀地逐一浮现。
+
+文件：
+
+```
+src/three/utils/LoadScaledTexture.ts   // loadImageBitmap / createPacedTextureLoader / TextureSource
+src/three/main.ts                      // 接 createPacedTextureLoader(maxEdge, concurrency=6)
+src/three/utils/DeviceTier.ts          // maxTextureEdge 2048→1024 / 1024→768
+tests/scaled-texture.test.ts           // loadImageBitmap 3 例 + 并发队列 2 例
+tests/device-tier.test.ts              // 纹理上限断言更新
+```
+
+验证：全量 `npm test` → 13 文件 / **85 tests** 通过；`npm run build` 通过。
+
+---
+
+## D032
+
+`createImageBitmap` 离屏路径引入的回归：**所有照片上下颠倒**。
+
+现象：D031 落地后浏览器实测照片全部上下颠倒。
+
+根因：three.js 对 `ImageBitmap` 纹理来源**跳过** `UNPACK_FLIP_Y_WEBGL`（`WebGLTextures.js` 的 `isImageBitmap` 分支，0.185.1 第 918-930 行），而 canvas 路径（`CanvasTexture` + flipY=true）会翻转。WebGL 规范规定 `UNPACK_FLIP_Y_WEBGL` 对 `ImageBitmap` 来源无效果，three 文档亦注明 flipY 对 ImageBitmap 无效、须在 `createImageBitmap` 时用 `imageOrientation` 预翻转。故 bitmap 以未翻转状态上传 → 与 three 默认采样（v=0 在平面底部）叠加 → 上下颠倒。
+
+修复：
+
+- `loadImageBitmap` 最终返回的 bitmap 一律加 `imageOrientation: 'flipY'` 预翻转：
+  - 大图：`createImageBitmap(source, { resizeWidth/Height, resizeQuality:'high', imageOrientation:'flipY' })`；
+  - 小图（不缩放）：额外一次 `createImageBitmap(source, { imageOrientation:'flipY' })`；
+- 首步解码保留默认 `from-image`（应用 EXIF 方向），翻转在第二步对已解码 bitmap 进行，避免破坏带 EXIF 旋转照片的方向；
+- 回归测试：断言缩放路径 `imageOrientation:'flipY'` 存在、小图路径多一次 flip 调用。
+
+验证：全量 `npm test` → 13 文件 / **85 tests** 通过；`npm run build` 通过；浏览器复验照片方向正常。
 
 ---
 

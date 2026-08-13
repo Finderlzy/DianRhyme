@@ -9,7 +9,7 @@ describe('resolveTier', () => {
     expect(tier.isMobile).toBe(false);
     expect(tier.isTouch).toBe(false);
     expect(tier.pixelRatioCap).toBe(2);
-    expect(tier.maxTextureEdge).toBe(2048);
+    expect(tier.maxTextureEdge).toBe(1024);
     expect(tier.particleCount).toBe(550);
     expect(tier.antialias).toBe(true);
   });
@@ -19,7 +19,7 @@ describe('resolveTier', () => {
     expect(tier.isMobile).toBe(true);
     expect(tier.isTouch).toBe(true);
     expect(tier.pixelRatioCap).toBe(1.75);
-    expect(tier.maxTextureEdge).toBe(1024);
+    expect(tier.maxTextureEdge).toBe(768);
     expect(tier.particleCount).toBe(120);
     expect(tier.antialias).toBe(false);
   });

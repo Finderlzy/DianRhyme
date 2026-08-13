@@ -15,8 +15,8 @@ export interface DeviceTier {
   antialias: boolean;
 }
 
-const DESKTOP = { pixelRatioCap: 2, maxTextureEdge: 2048, particleCount: 550, antialias: true };
-const MOBILE = { pixelRatioCap: 1.75, maxTextureEdge: 1024, particleCount: 120, antialias: false };
+const DESKTOP = { pixelRatioCap: 2, maxTextureEdge: 1024, particleCount: 550, antialias: true };
+const MOBILE = { pixelRatioCap: 1.75, maxTextureEdge: 768, particleCount: 120, antialias: false };
 
 export function resolveTier(input: TierInput): DeviceTier {
   const isMobile = input.width < 768 && input.coarsePointer;

@@ -1,5 +1,65 @@
 # 开发记录
 
+## v3.5 — 优化"精彩瞬间"页面的卡顿
+
+**日期**：2026-08-13
+
+### 变更内容
+
+针对"精彩瞬间"页（Three.js 照片宇宙）的卡顿问题，分三块落地性能优化，整体视觉不变：
+
+**① 方案 1（防御性修复 + 像素比修正）：**
+
+1. **像素比修正**（`Renderer.ts`）：实际渲染像素比从"无条件 cap"改为 `min(devicePixelRatio, cap)`。DPR=1 屏幕（如 Windows 1080p）原被强制渲染到 2×（4 倍像素量）再降采样，纯为抗锯齿浪费填充率——桌面卡顿最大单一来源
+2. **delta 钳制**（`AnimationLoop.ts`）：引入 `MAX_DELTA = 0.05`，自持 `elapsed` 累加器；切标签页 / GC 停顿 / DevTools 打断后的超大 delta 不再造成动画跳变
+3. **标签页隐藏暂停**（`AnimationLoop.ts`）：监听 `visibilitychange`，隐藏→停循环、可见→恢复且首帧 delta≈0（`start()` 丢弃 clock 陈旧累积）；监听常驻只绑定一次，恢复时浮动/粒子相位连续
+4. **测试补齐**：`tests/renderer.test.ts` 新增 DPR 低于/高于 cap 两边界用例；`tests/animation-loop.test.ts` 新增大 delta 钳制、hidden 暂停 / visible 恢复不双循环用例
+
+**② 方案 2（粒子动画 GPU 着色器化）：**
+
+5. **粒子 GPU 化**（`Particles.ts`）：`PointsMaterial` → `ShaderMaterial`，位置漂移（±0.5 / 0.4 / 0.5）移入 vertex shader，相位由 position 伪随机哈希生成；`gl_PointSize` 公式与原 `sizeAttenuation` 数学等价；删除逐粒子 CPU 循环与整块 buffer `needsUpdate` 重传，每帧固定开销近乎归零
+6. **viewport 同步**（`main.ts`）：渲染循环内 `Particles.syncViewport(particles, gl.domElement.height)`，点尺寸自动跟随 resize 与 DPR
+7. **粒子消失 bug 修复**（D030）：three ShaderMaterial 前缀已自动声明 `attribute vec3 position;`，初版重复声明致 GLSL 编译失败、粒子全部不渲染；删除重复声明 + 新增回归测试断言
+
+**③ 加载/绽放窗口期去卡顿（D028 / D031）：**
+
+页面加载时照片逐一 bloom 浮现阶段非常卡（引导文字阶段不卡）。根因：moments 页 35 张图中约 20 张边长 >2000px（多张 8192×4608 / 8064×6048 / 6000×3376、单张 10-13MB）；旧路径主线程 `drawImage` 同步降采样每张数十 ms，且 bloom 与纹理就绪强耦合——每张照片浮现那帧恰好撞上重降采样 + 纹理上传 + mipmap 生成。
+
+8. **降采样移出主线程**（`LoadScaledTexture.ts`）：新增 `loadImageBitmap`，`fetch → blob → createImageBitmap(blob, { resizeWidth/Height, resizeQuality:'high' })`，解码+缩放全在浏览器 worker 完成，主线程不再做 `ctx.drawImage`；超大图先解码取尺寸、再二次离屏缩放；原 canvas 路径（`loadScaledImage`）保留为兜底（`createImageBitmap`/`fetch` 不可用或失败时回退）
+9. **纹理上限收紧**（`DeviceTier.ts`）：桌面 `maxTextureEdge` 2048→**1024**、移动 1024→**768**，上传/mipmap/显存降为 ~1/4
+10. **加载并发限流**（`LoadScaledTexture.ts` 的 `createPacedTextureLoader` + `main.ts`）：并发上限 6 张的异步队列，消除大图集中突发，照片更均匀地逐一浮现
+11. **照片颠倒回归修复**（D032）：离屏路径引入照片上下颠倒——three 对 `ImageBitmap` 来源不应用 `UNPACK_FLIP_Y_WEBGL`（`WebGLTextures.js` isImageBitmap 分支），须用 `imageOrientation:'flipY'` 预翻转。`loadImageBitmap` 最终返回的 bitmap 一律预翻转（大图在缩放步、小图多一次 flip 调用），首步解码保留 `from-image` 应用 EXIF 方向
+
+### 涉及文件
+
+| 文件 | 变更 |
+|---|---|
+| `src/three/core/Renderer.ts` | 构造新增可注入 `pixelRatioSource`（默认读 `window.devicePixelRatio || 1`，node 返回 1）；`resize` 改 `min(dpr, cap)` |
+| `src/three/core/AnimationLoop.ts` | `MAX_DELTA` 钳制、自持 `elapsed`、`visibilitychange` 暂停/恢复 |
+| `src/three/effects/Particles.ts` | 重写：ShaderMaterial + GPU 漂移 + `syncViewport`；修复 position 重复声明 |
+| `src/three/main.ts` | 渲染循环新增 `Particles.syncViewport(...)`；纹理加载改用 `createPacedTextureLoader({ maxEdge, concurrency: 6 })` |
+| `src/three/utils/DeviceTier.ts` | `maxTextureEdge` 2048→1024 / 1024→768 |
+| `src/three/utils/LoadScaledTexture.ts` | 新增 `loadImageBitmap`（离屏解码缩放 + `imageOrientation:'flipY'` 预翻转）、`createPacedTextureLoader`（并发队列）、`TextureSource`；`textureFromSource` 支持 `ImageBitmap` |
+| `tests/renderer.test.ts` | 更新既有像素比用例 + 新增 DPR 封顶/低值边界 |
+| `tests/animation-loop.test.ts` | 新增 delta 钳制与可见性暂停/恢复用例 |
+| `tests/particles.test.ts` | 重写：材质/uniform/着色器断言 + position 不重复声明回归用例 |
+| `tests/scaled-texture.test.ts` | 新增 loadImageBitmap 3 例（含 flipY）+ 并发队列 2 例（限流、顺序） |
+| `tests/device-tier.test.ts` | 纹理上限断言更新 |
+
+### 验收
+
+- **结论**：全量 `npm test` → 13 文件 / **85 tests** 全部通过；`npm run build` 通过（three.js chunk 约 553 kB / gzip 142 kB 的 `>500kB` 警告为已知预期，见 AGENTS.md）
+- **人工反馈**：拖动旋转流畅；粒子经 bug 修复后恢复可见且尺寸与原版一致；照片方向恢复正常；绽放阶段卡顿显著缓解
+- **待复验**：线上部署后最终确认绽放阶段不掉帧
+
+### 提交记录
+
+| Commit | 说明 |
+|---|---|
+| 暂未提交 | 用户决定不执行 git（同验收记录约定） |
+
+---
+
 ## v2.2 — 实践过程记录改造为推文时间线
 
 **日期**：2026-08-06

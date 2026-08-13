@@ -11,9 +11,10 @@ import { Raycaster } from './interaction/Raycaster';
 import { PhotoManager } from './photos/PhotoManager';
 import type { PhotoNode, TextureLoaderFn } from './photos/PhotoNode';
 import { resolveTier } from './utils/DeviceTier';
-import { loadScaledImage, textureFromSource } from './utils/LoadScaledTexture';
+import { createPacedTextureLoader } from './utils/LoadScaledTexture';
 
 const MAX_DIRECT_LOAD = 30;
+const LOAD_CONCURRENCY = 6;
 const ENTERING_DURATION_MS = 2000;
 const LOADING_TIMEOUT_MS = 4000;
 
@@ -58,7 +59,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
   if (moments.length === 0) return; // 空态卡由 Astro 端渲染
 
   if (moments.length > MAX_DIRECT_LOAD) {
-    console.warn(`[Moments] 照片数量(${moments.length})超过 ${MAX_DIRECT_LOAD},建议分批加载;当前仍直接加载。`);
+    console.warn(`[Moments] 照片数量(${moments.length})超过 ${MAX_DIRECT_LOAD},由并发队列按 ${LOAD_CONCURRENCY} 张/批限流加载。`);
   }
 
   const gl = new THREE.WebGLRenderer({ antialias: tier.antialias, powerPreference: 'high-performance' });
@@ -85,8 +86,11 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     if (readyCount >= total) hideLoading();
   };
 
-  // 降采样 loader:图片超出 maxEdge 时用 canvas 等比缩小后再进 GPU
-  const textureLoader: TextureLoaderFn = (src) => loadScaledImage(src, tier.maxTextureEdge).then(textureFromSource);
+  // 并发限流的离屏 loader:createImageBitmap 在 worker 解码缩放,主线程不做 drawImage;最多同时 6 张在途
+  const textureLoader: TextureLoaderFn = createPacedTextureLoader({
+    maxEdge: tier.maxTextureEdge,
+    concurrency: LOAD_CONCURRENCY,
+  });
 
   const photoManager = new PhotoManager(sceneManager.scene, moments, {
     count: moments.length,
@@ -168,6 +172,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     if (!tier.reducedMotion) {
       Particles.update(particles, delta);
     }
+    Particles.syncViewport(particles, gl.domElement.height);
     focusController.update(delta);
     photoManager.update(delta, elapsed, cameraManager.getCamera());
     renderer.render(sceneManager.scene, cameraManager.getCamera());
