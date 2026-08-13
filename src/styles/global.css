@@ -169,7 +169,7 @@ button {
 /* ===== View Transitions ===== */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: fade 0.4s ease;
+  animation: fade 0.3s ease;
 }
 
 @keyframes fade {

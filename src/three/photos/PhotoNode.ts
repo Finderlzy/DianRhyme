@@ -12,8 +12,16 @@ const INTRO_MAX_DELAY = 0.35;
 
 export type TextureLoaderFn = (src: string) => THREE.Texture | Promise<THREE.Texture>;
 
+export interface StagedTextureSource {
+  thumbnail: Promise<THREE.Texture>;
+  full: Promise<THREE.Texture>;
+}
+
+export type StagedTextureLoaderFn = (src: string) => StagedTextureSource;
+
 export interface PhotoNodeOptions {
   textureLoader?: TextureLoaderFn;
+  stagedTextureLoader?: StagedTextureLoaderFn;
   onReady?: (node: PhotoNode) => void;
   reducedMotion?: boolean;
 }
@@ -38,13 +46,15 @@ export class PhotoNode {
   private bloomed = false;
   private readyFired = false;
   private introStartedAt: number | null = null;
+  private thumbnailTexture: THREE.Texture | null = null;
+  private fullApplied = false;
 
   constructor(moment: Moment, position: LayoutPoint, options: PhotoNodeOptions = {}) {
     this.id = moment.id;
     this.reducedMotion = options.reducedMotion ?? false;
     this.onReady = options.onReady;
 
-    const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, color: PLACEHOLDER_COLOR });
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     this.mesh.position.set(position.x, position.y, position.z);
     // D010 就绪即绽放:未就绪前隐藏
@@ -57,7 +67,7 @@ export class PhotoNode {
     // D012: 远处保持随机角度
     this.mesh.rotation.y = randomInRange(0, Math.PI * 2);
 
-    this.loadTexture(moment.src, material, options.textureLoader);
+    this.loadTexture(moment.src, material, options);
   }
 
   update(_deltaTime: number, elapsedTime: number): void {
@@ -97,10 +107,17 @@ export class PhotoNode {
     const material = this.mesh.material;
     if (material instanceof THREE.Material) material.dispose();
     if (material instanceof THREE.MeshBasicMaterial && material.map) material.map.dispose();
+    if (this.thumbnailTexture && this.thumbnailTexture !== (material as THREE.MeshBasicMaterial).map) {
+      this.thumbnailTexture.dispose();
+    }
   }
 
-  private loadTexture(src: string, material: THREE.MeshBasicMaterial, textureLoader?: TextureLoaderFn): void {
-    const loader: TextureLoaderFn = textureLoader ?? defaultTextureLoader();
+  private loadTexture(src: string, material: THREE.MeshBasicMaterial, options: PhotoNodeOptions): void {
+    if (options.stagedTextureLoader) {
+      this.loadStaged(src, material, options.stagedTextureLoader);
+      return;
+    }
+    const loader: TextureLoaderFn = options.textureLoader ?? defaultTextureLoader();
     let result: THREE.Texture | Promise<THREE.Texture>;
     try {
       result = loader(src);
@@ -119,11 +136,67 @@ export class PhotoNode {
     }
   }
 
+  private loadStaged(src: string, material: THREE.MeshBasicMaterial, loader: StagedTextureLoaderFn): void {
+    let staged: StagedTextureSource;
+    try {
+      staged = loader(src);
+    } catch {
+      this.setPlaceholder(material, true);
+      return;
+    }
+    staged.thumbnail.then(
+      (texture) => this.applyThumbnail(texture, material),
+      () => {
+        // 缩略图失败不阻断,全图仍可能到达
+      },
+    );
+    staged.full.then(
+      (texture) => this.applyFull(texture, material),
+      () => this.setPlaceholder(material, false),
+    );
+  }
+
+  private applyThumbnail(texture: THREE.Texture, material: THREE.MeshBasicMaterial): void {
+    if (this.fullApplied) {
+      texture.dispose();
+      return;
+    }
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.anisotropy = 1;
+    texture.needsUpdate = true;
+    material.color.set(0xffffff);
+    material.map = texture;
+    material.needsUpdate = true;
+    this.thumbnailTexture = texture;
+    this.fireReady(false);
+  }
+
+  private applyFull(texture: THREE.Texture, material: THREE.MeshBasicMaterial): void {
+    this.fullApplied = true;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
+    texture.anisotropy = 2;
+    texture.needsUpdate = true;
+    material.color.set(0xffffff);
+    material.map = texture;
+    material.needsUpdate = true;
+    if (this.thumbnailTexture && this.thumbnailTexture !== texture) {
+      this.thumbnailTexture.dispose();
+    }
+    this.thumbnailTexture = null;
+    this.fireReady(false);
+  }
+
   private applyTexture(texture: THREE.Texture, material: THREE.MeshBasicMaterial, instant: boolean): void {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.generateMipmaps = true;
-    texture.anisotropy = 4;
+    texture.anisotropy = 2;
+    material.color.set(0xffffff);
     material.map = texture;
     material.needsUpdate = true;
     this.fireReady(instant);

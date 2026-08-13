@@ -5,6 +5,7 @@ import { PhotoNode, type PhotoNodeOptions } from './PhotoNode';
 
 export interface PhotoManagerOptions {
   textureLoader?: PhotoNodeOptions['textureLoader'];
+  stagedTextureLoader?: PhotoNodeOptions['stagedTextureLoader'];
   onReady?: PhotoNodeOptions['onReady'];
   reducedMotion?: boolean;
 }

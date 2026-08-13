@@ -9,12 +9,13 @@ import { Controls } from './interaction/Controls';
 import { FocusController } from './interaction/FocusController';
 import { Raycaster } from './interaction/Raycaster';
 import { PhotoManager } from './photos/PhotoManager';
-import type { PhotoNode, TextureLoaderFn } from './photos/PhotoNode';
+import type { PhotoNode } from './photos/PhotoNode';
 import { resolveTier } from './utils/DeviceTier';
-import { createPacedTextureLoader } from './utils/LoadScaledTexture';
+import { createStagedTextureLoader } from './utils/LoadScaledTexture';
 
 const MAX_DIRECT_LOAD = 30;
 const LOAD_CONCURRENCY = 6;
+const THUMB_EDGE = 256;
 const ENTERING_DURATION_MS = 2000;
 const LOADING_TIMEOUT_MS = 4000;
 
@@ -24,6 +25,10 @@ export interface UniverseOptions {
   hintElement?: HTMLElement | null;
   backButton?: HTMLElement | null;
   loadingElement?: HTMLElement | null;
+}
+
+export interface UniverseHandle {
+  dispose: () => void;
 }
 
 function formatDate(iso: string): string {
@@ -43,8 +48,12 @@ function populateCaption(el: HTMLElement, node: PhotoNode): void {
   if (desc) desc.textContent = moment?.description ?? '';
 }
 
-export function initUniverse(container: HTMLElement, options: UniverseOptions = {}): void {
+export function initUniverse(container: HTMLElement, options: UniverseOptions = {}): UniverseHandle {
   const { guideElement, captionElement, hintElement, backButton, loadingElement } = options;
+
+  const noop = (): void => {};
+  if (container.dataset.universeInited === 'true') return { dispose: noop };
+  container.dataset.universeInited = 'true';
 
   const tier = resolveTier({
     dpr: window.devicePixelRatio || 1,
@@ -56,7 +65,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
   const sceneManager = new SceneManager();
   const cameraManager = new CameraManager();
 
-  if (moments.length === 0) return; // 空态卡由 Astro 端渲染
+  if (moments.length === 0) return { dispose: noop }; // 空态卡由 Astro 端渲染
 
   if (moments.length > MAX_DIRECT_LOAD) {
     console.warn(`[Moments] 照片数量(${moments.length})超过 ${MAX_DIRECT_LOAD},由并发队列按 ${LOAD_CONCURRENCY} 张/批限流加载。`);
@@ -86,8 +95,9 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     if (readyCount >= total) hideLoading();
   };
 
-  // 并发限流的离屏 loader:createImageBitmap 在 worker 解码缩放,主线程不做 drawImage;最多同时 6 张在途
-  const textureLoader: TextureLoaderFn = createPacedTextureLoader({
+  // 两段式 loader:缩略图先点亮,全图后替换;同一时刻最多 6 张在途
+  const stagedTextureLoader = createStagedTextureLoader({
+    thumbEdge: THUMB_EDGE,
     maxEdge: tier.maxTextureEdge,
     concurrency: LOAD_CONCURRENCY,
   });
@@ -98,7 +108,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     minDistance: 4,
     maxRetries: 50,
   }, {
-    textureLoader,
+    stagedTextureLoader,
     onReady: onNodeReady,
     reducedMotion: tier.reducedMotion,
   });
@@ -110,7 +120,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
   };
   startLoadingHint();
   // 兜底:超时仍未全部就绪则隐藏加载提示并点亮剩余占位照片
-  window.setTimeout(() => {
+  const loadingTimeoutId = window.setTimeout(() => {
     hideLoading();
     photoManager.nodes.forEach((node) => node.forceReady());
   }, LOADING_TIMEOUT_MS);
@@ -119,7 +129,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
   const focusController = new FocusController(cameraManager, tier.reducedMotion);
   let focusedNode: PhotoNode | null = null;
 
-  renderer.domElement.addEventListener('click', (event) => {
+  const onClick = (event: MouseEvent): void => {
     const state = cameraManager.getState();
     if (state !== UniverseState.EXPLORING && state !== UniverseState.VIEWING) return;
 
@@ -132,9 +142,10 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     } else if (state === UniverseState.VIEWING) {
       focusController.returnToExplore();
     }
-  });
+  };
+  renderer.domElement.addEventListener('click', onClick);
 
-  cameraManager.onStateChange((state) => {
+  const onStateChange = (state: UniverseState): void => {
     const viewing = state === UniverseState.VIEWING;
     backButton?.classList.toggle('is-hidden', !viewing);
     hintElement?.classList.toggle('is-hidden', state !== UniverseState.EXPLORING);
@@ -144,13 +155,18 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     } else {
       captionElement?.classList.add('is-hidden');
     }
-  });
-  backButton?.addEventListener('click', () => focusController.returnToExplore());
-  window.addEventListener('keydown', (event) => {
+  };
+  cameraManager.onStateChange(onStateChange);
+
+  const onBackClick = (): void => focusController.returnToExplore();
+  backButton?.addEventListener('click', onBackClick);
+
+  const onKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && cameraManager.getState() === UniverseState.VIEWING) {
       focusController.returnToExplore();
     }
-  });
+  };
+  window.addEventListener('keydown', onKeydown);
 
   // D013 触屏设备提示双指缩放
   if (hintElement) {
@@ -159,22 +175,43 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
       : '拖动旋转 · 滚轮缩放 · 点击查看';
   }
 
-  window.setTimeout(() => {
+  const enteringTimeoutId = window.setTimeout(() => {
     guideElement?.classList.add('is-hidden');
     cameraManager.setState(UniverseState.EXPLORING);
   }, ENTERING_DURATION_MS);
 
   const loop = new AnimationLoop();
   loop.start((delta, elapsed) => {
-    if (cameraManager.getState() === UniverseState.EXPLORING) {
+    const state = cameraManager.getState();
+    if (state === UniverseState.EXPLORING) {
       controls.update();
     }
-    if (!tier.reducedMotion) {
-      Particles.update(particles, delta);
+    focusController.update(delta);
+    // VIEWING 阶段画面静止,冻结粒子与照片浮动以省 GPU/CPU
+    if (state !== UniverseState.VIEWING) {
+      if (!tier.reducedMotion) {
+        Particles.update(particles, delta);
+      }
+      photoManager.update(delta, elapsed, cameraManager.getCamera());
     }
     Particles.syncViewport(particles, gl.domElement.height);
-    focusController.update(delta);
-    photoManager.update(delta, elapsed, cameraManager.getCamera());
     renderer.render(sceneManager.scene, cameraManager.getCamera());
   });
+
+  const dispose = (): void => {
+    loop.stop();
+    window.clearTimeout(loadingTimeoutId);
+    window.clearTimeout(enteringTimeoutId);
+    renderer.domElement.removeEventListener('click', onClick);
+    window.removeEventListener('keydown', onKeydown);
+    backButton?.removeEventListener('click', onBackClick);
+    controls.dispose();
+    photoManager.nodes.forEach((node) => node.dispose());
+    particles.geometry.dispose();
+    (particles.material as THREE.Material).dispose();
+    renderer.dispose();
+    if (typeof gl.forceContextLoss === 'function') gl.forceContextLoss();
+  };
+
+  return { dispose };
 }

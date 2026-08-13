@@ -4,13 +4,13 @@ export interface Props {
   role: string;
   bio: string;
   avatar?: string;
+  gender?: 'male' | 'female';
   expandDirection: 'right';
 }
 
-const { name, role, bio, avatar, expandDirection } = Astro.props;
+const { name, role, bio, avatar, gender, expandDirection } = Astro.props;
 
-const colors = ['#E8923A', '#D4956B', '#C49A6C', '#B89B7D', '#A98454', '#D8A86B', '#C77B3A', '#9C7A50', '#E0A96D'];
-const colorIndex = name.length % colors.length;
+const avatarColor = gender === 'female' ? '#E8923A' : '#A98454';
 const initials = name.slice(-2);
 ---
 
@@ -18,7 +18,7 @@ const initials = name.slice(-2);
   <div class="card-inner">
     <!-- Left: circle + name/role (always visible) -->
     <div class="card-left">
-      <div class="avatar-circle" style={`background-color: ${colors[colorIndex]}`}>
+      <div class="avatar-circle" style={`background-color: ${avatarColor}`}>
         <span class="initials">{initials}</span>
       </div>
       <span class="card-name">{name}</span>
@@ -28,7 +28,7 @@ const initials = name.slice(-2);
     <!-- Middle: photo (revealed by card width expansion) -->
     <div class="card-photo">
       {avatar ? (
-        <img src={avatar} alt={name} class="photo-img" />
+        <img src={avatar} alt={name} class="photo-img" loading="lazy" decoding="async" />
       ) : (
         <div class="avatar-circle avatar-circle--photo" style={`background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent))`}>
           <span class="initials initials--photo">{initials}</span>

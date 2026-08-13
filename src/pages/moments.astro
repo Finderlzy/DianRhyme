@@ -32,16 +32,23 @@ import { moments } from '../data/moments';
 </BaseLayout>
 
 <script>
-  import { initUniverse } from '../three/main';
   const container = document.getElementById('universe-canvas');
   const guide = document.getElementById('guide');
   const caption = document.getElementById('caption');
   const hint = document.getElementById('hint');
   const backBtn = document.getElementById('back-btn');
   const loading = document.getElementById('loading');
-  if (container) {
-    initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton: backBtn, loadingElement: loading });
-  }
+
+  let dispose = () => {};
+  document.addEventListener('astro:before-swap', () => dispose(), { once: true });
+
+  (async () => {
+    if (!container) return;
+    const { initUniverse } = await import('../three/main');
+    if (!container.isConnected) return; // 加载期间已切走
+    const handle = initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton: backBtn, loadingElement: loading });
+    dispose = handle.dispose;
+  })();
 </script>
 
 <style is:global>
@@ -49,6 +56,11 @@ import { moments } from '../data/moments';
     position: fixed;
     inset: 0;
     z-index: 0;
+  }
+
+  /* 暗色页上噪点遮罩几乎不可见,隐藏以省每帧合成开销 */
+  body::before {
+    display: none;
   }
 
   body {

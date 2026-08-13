@@ -25,4 +25,8 @@ export class Controls {
   update(): void {
     this.controls.update();
   }
+
+  dispose(): void {
+    this.controls.dispose();
+  }
 }
