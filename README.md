@@ -1,13 +1,12 @@
 <div align="center">
 
-<img src="assets/logo.jpg" alt="和音滇韵 · Lahu Music 团队标识" width="260">
+<img src="assets/logo.png" alt="和音滇韵 · Lahu Music 团队标识" width="260">
 
 **北京科技大学“酉良和音滇韵民族团结实践团”**
 
 [![Deploy to GitHub Pages](https://github.com/Finderlzy/DianRhyme/actions/workflows/deploy.yml/badge.svg)](https://github.com/Finderlzy/DianRhyme/actions)
 [![Site](https://img.shields.io/badge/在线访问-finderlzy.github.io/DianRhyme-blue)](https://finderlzy.github.io/DianRhyme/)
 ![Astro](https://img.shields.io/badge/Astro-4.x-FF5D01?logo=astro&logoColor=white)
-![Three.js](https://img.shields.io/badge/Three.js-照片宇宙-000000?logo=three.js)
 
 </div>
 
@@ -23,7 +22,6 @@
 
 “和音滇韵”是本次音乐支教与民族团结实践的成果展示网页，也是团队为这段经历留下的一份数字记忆。网页整理了实践期间的文字记录、团队故事和现场影像，希望让更多人了解这次实践，感受音乐连接不同地域与不同成长经历的力量。
 
-**在线访问**：https://finderlzy.github.io/DianRhyme/
 
 ## 实践内容
 
