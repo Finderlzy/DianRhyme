@@ -10,10 +10,10 @@ export interface Bounds3 {
 export const DEFAULT_PARTICLE_COUNT = 400;
 export const MAX_PARTICLE_COUNT = 1000;
 
-const COLOR_WARM_CREAM = new THREE.Color(0xffe9c8);
-const COLOR_AMBER = new THREE.Color(0xffb36b);
-const BASE_OPACITY = 0.65;
-const OPACITY_AMPLITUDE = 0.12;
+const COLOR_WARM_CREAM = new THREE.Color(0xd8c9b2);
+const COLOR_AMBER = new THREE.Color(0x8c332d);
+const BASE_OPACITY = 0.54;
+const OPACITY_AMPLITUDE = 0.08;
 const BREATH_PERIOD_SECONDS = 4;
 
 const PARTICLE_SIZE = 0.07;

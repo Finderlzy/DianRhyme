@@ -1,181 +1,72 @@
 ---
-export interface PostEntry {
-  date: string;
-  title: string;
-  cover?: string;
-  excerpt?: string;
-  url: string;
-}
+import type { PostEntry } from '../data/posts';
+import { formatPostDate } from '../data/posts';
 
-const { entries = [] } = Astro.props as { entries: PostEntry[] };
+export interface Props { entries: PostEntry[]; }
+const { entries } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 {entries.length > 0 && (
-  <div class="post-timeline">
-    {entries.map((post) => (
-      <a
-        class="post-card"
-        href={post.url}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {post.cover ? (
-          <div class="post-cover">
-            <img src={post.cover} alt={post.title} loading="lazy" decoding="async" />
+  <div class="timeline-shell">
+    <nav class="date-index" aria-label="纪事日期索引">
+      {entries.map((entry, index) => <a href={'#' + entry.id} class:list={[index === 0 && 'is-first']}><span>{String(index + 1).padStart(2, '0')}</span>{formatPostDate(entry.date)}</a>)}
+    </nav>
+    <div class="post-stream">
+      {entries.map((entry, index) => (
+        <article id={entry.id} class:list={['post-entry', entry.variant !== 'standard' && 'post-entry--' + entry.variant]} data-post-id={entry.id}>
+          <div class="post-marker"><span>{String(index + 1).padStart(2, '0')}</span><i aria-hidden="true"></i></div>
+          <div class="post-side"><time datetime={entry.date}>{formatPostDate(entry.date)}</time><span>{entry.location}</span><span>{entry.phase === 'prologue' ? '序章' : '十四日主时间轴'}</span></div>
+          <div class="post-content">
+            {entry.cover ? <img src={entry.cover} alt={entry.title} width="1600" height="1000" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" /> : <div class="post-no-image" aria-label="暂无配图"><span>IMAGE / 待补</span></div>}
+            <div class="post-copy"><p class="date-label">{entry.phase === 'prologue' ? 'PROLOGUE' : 'FIELD NOTE'} · {formatPostDate(entry.date)}</p><h3>{entry.title}</h3><p>{entry.excerpt || '这条纪事尚未补充摘要，日期与标题仍保留在时间轴中。'}</p>{entry.url ? <a class="text-link" href={entry.url} target="_blank" rel="noopener noreferrer">阅读微信原文</a> : <span class="pending-link">原文链接待提供</span>}</div>
           </div>
-        ) : (
-          <div class="post-cover post-cover-placeholder">
-            <span class="post-cover-icon">🎵</span>
-          </div>
-        )}
-        <div class="post-body">
-          <span class="post-date">{post.date}</span>
-          <h3 class="post-title">{post.title}</h3>
-          {post.excerpt && <p class="post-excerpt">{post.excerpt}</p>}
-          <span class="post-more">
-            阅读全文
-            <span class="post-more-arrow">→</span>
-          </span>
-        </div>
-      </a>
-    ))}
+        </article>
+      ))}
+    </div>
   </div>
 )}
 
+<script>
+  const items = [...document.querySelectorAll<HTMLElement>('[data-post-id]')];
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.date-index a')];
+  if ('IntersectionObserver' in window && items.length && links.length) {
+    const observer = new IntersectionObserver((observed) => {
+      observed.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const id = (entry.target as HTMLElement).dataset.postId;
+        links.forEach((link) => link.classList.toggle('is-current', link.getAttribute('href') === '#' + id));
+      });
+    }, { rootMargin: '-18% 0px -62% 0px', threshold: 0 });
+    items.forEach((item) => observer.observe(item));
+  }
+</script>
+
 <style>
-  .post-timeline {
-    max-width: 720px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .post-card {
-    display: flex;
-    align-items: stretch;
-    background: var(--color-bg-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
-  }
-
-  .post-card:hover {
-    box-shadow: var(--shadow-lg);
-    border-color: var(--color-primary-light);
-    transform: translateY(-2px);
-  }
-
-  .post-cover {
-    width: 200px;
-    min-height: 140px;
-    flex-shrink: 0;
-    background: var(--color-bg);
-  }
-
-  .post-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .post-cover-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent-light));
-  }
-
-  .post-cover-icon {
-    font-size: 2rem;
-    opacity: 0.7;
-  }
-
-  .post-body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 20px 24px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .post-date {
-    font-family: var(--font-heading);
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    letter-spacing: 0.06em;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .post-date::before {
-    content: "";
-    display: inline-block;
-    width: 18px;
-    height: 1px;
-    background: var(--color-primary);
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-
-  .post-title {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.4;
-    text-wrap: balance;
-  }
-
-  .post-excerpt {
-    font-size: 0.95rem;
-    color: var(--color-text-light);
-    line-height: 1.7;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .post-more {
-    margin-top: auto;
-    padding-top: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-primary-dark);
-  }
-
-  .post-more-arrow {
-    transition: transform 0.3s ease;
-  }
-
-  .post-card:hover .post-more-arrow {
-    transform: translateX(4px);
-  }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 600px) {
-    .post-card {
-      flex-direction: column;
-    }
-
-    .post-cover,
-    .post-cover-placeholder {
-      width: 100%;
-      height: 180px;
-      min-height: 0;
-    }
-
-    .post-body {
-      padding: 16px 20px;
-    }
-  }
+  .timeline-shell { position: relative; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 48px; }
+  .date-index { position: sticky; top: calc(var(--nav-height) + 28px); align-self: start; display: grid; gap: 12px; padding-top: 5px; }
+  .date-index a { display: flex; align-items: baseline; gap: 8px; color: var(--mist); font-family: var(--font-mono); font-size: 0.68rem; }
+  .date-index a span { color: var(--mist); font-size: 0.62rem; }
+  .date-index a:hover, .date-index a.is-current { color: var(--lacquer); }
+  .date-index a.is-current span { color: var(--lacquer); }
+  .post-stream { position: relative; }
+  .post-stream::before { content: ""; position: absolute; top: 10px; bottom: 10px; left: 7px; width: 1px; background: var(--line); }
+  .post-entry { position: relative; display: grid; grid-template-columns: 32px 150px minmax(0, 1fr); gap: 20px; padding: 0 0 76px; scroll-margin-top: calc(var(--nav-height) + 32px); }
+  .post-marker { position: relative; z-index: 1; padding-top: 4px; background: var(--paper); }
+  .post-marker span { display: block; color: var(--lacquer); font-family: var(--font-mono); font-size: 0.68rem; }
+  .post-marker i { display: block; width: 9px; height: 9px; margin: 14px 0 0 3px; border: 2px solid var(--lacquer); border-radius: 50%; background: var(--paper); }
+  .post-side { display: grid; align-content: start; gap: 7px; padding-top: 4px; color: var(--mist); font-family: var(--font-mono); font-size: 0.69rem; line-height: 1.5; }
+  .post-side time { color: var(--ink); }
+  .post-content { min-width: 0; border-top: 1px solid var(--line); }
+  .post-content > img, .post-no-image { width: 100%; margin-bottom: 22px; }
+  .post-content > img { aspect-ratio: 16 / 9; object-fit: cover; }
+  .post-no-image { display: grid; place-items: center; min-height: 180px; border: 1px dashed var(--line); color: var(--mist); font-family: var(--font-mono); font-size: 0.72rem; }
+  .post-copy { max-width: 700px; }
+  .post-copy h3 { margin: 9px 0 12px; font-size: clamp(1.5rem, 2.5vw, 2.4rem); }
+  .post-copy > p:not(.date-label) { color: rgba(33, 27, 24, 0.72); line-height: 1.95; }
+  .post-copy .text-link, .pending-link { margin-top: 16px; font-size: 0.84rem; }
+  .pending-link { display: inline-block; color: var(--mist); }
+  .post-entry--featured .post-content > img { aspect-ratio: 5 / 3; }
+  @media (max-width: 800px) { .timeline-shell { grid-template-columns: 1fr; gap: 30px; } .date-index { position: static; display: flex; gap: 14px; overflow-x: auto; padding: 0 0 12px; border-bottom: 1px solid var(--line); scrollbar-width: thin; } .date-index a { flex: 0 0 auto; } .post-entry { grid-template-columns: 28px 1fr; gap: 14px; } .post-side { grid-column: 2; grid-row: 1; display: flex; flex-wrap: wrap; gap: 8px 14px; } .post-content { grid-column: 2; grid-row: 2; } .post-stream::before { left: 6px; } }
+  @media (max-width: 520px) { .post-entry { padding-bottom: 54px; } .post-content > img { aspect-ratio: 4 / 3; } .post-copy h3 { font-size: 1.55rem; } }
 </style>

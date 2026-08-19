@@ -1,120 +1,55 @@
 ---
+export interface Props { theme?: 'paper' | 'night'; }
+const { theme = 'paper' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
-
 const links = [
-  { href: '', label: '首页' },
-  { href: 'diary', label: '实践过程记录' },
-  { href: 'moments', label: '精彩瞬间' },
+  { href: '', label: '首页', number: '01' },
+  { href: 'diary', label: '十四日纪事', number: '02' },
+  { href: 'moments', label: '影像档案', number: '03' },
 ];
 ---
 
-<nav class="navbar">
+<nav class:list={['navbar', theme === 'night' && 'navbar--night']} aria-label="主导航">
   <div class="navbar-inner">
-    <a href={base} class="logo">
+    <a href={base} class="logo" aria-label="和音滇韵首页">
       <span class="logo-text">和音滇韵</span>
-      <span class="logo-badge"><img src={base + 'images/logo.jpg'} alt="队徽" /></span>
+      <span class="logo-badge"><img src={base + 'images/logo.jpg'} alt="" /></span>
     </a>
     <ul class="nav-links">
       {links.map((link) => {
         const fullHref = base + link.href;
-        // Build what the page path looks like: /DianRhyme/ or /DianRhyme/diary/
         const pagePath = base + (link.href ? link.href + '/' : '');
         const isActive = currentPath === pagePath || currentPath === (base + link.href);
-        return (
-          <li>
-            <a href={fullHref} class={isActive ? 'active' : ''} aria-current={isActive ? 'page' : undefined}>
-              {link.label}
-            </a>
-          </li>
-        );
+        return <li><a href={fullHref} class:list={[isActive && 'active']} aria-current={isActive ? 'page' : undefined}><span class="nav-number">{link.number}</span>{link.label}</a></li>;
       })}
     </ul>
   </div>
 </nav>
 
 <style>
-  .navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--nav-height);
-    z-index: 100;
-    background: rgba(255, 254, 251, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
-    transition: background 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .navbar.scrolled {
-    background: rgba(255, 254, 251, 0.98);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .navbar-inner {
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: 0 24px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-heading);
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--color-text);
-    letter-spacing: 0.05em;
-  }
-
-  .logo-badge {
-    width: 30px;
-    height: 30px;
-  }
-
-  .logo:hover {
-    color: var(--color-primary);
-  }
-
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 8px;
-  }
-
-  .nav-links a {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    color: var(--color-text-light);
-    transition: all 0.2s ease;
-  }
-
-  .nav-links a:hover {
-    color: var(--color-primary);
-    background: rgba(232, 146, 58, 0.08);
-  }
-
-  .nav-links a.active {
-    color: var(--color-primary);
-    background: rgba(232, 146, 58, 0.12);
-    font-weight: 600;
-  }
+  .navbar { position: fixed; inset: 0 0 auto; z-index: 100; height: var(--nav-height); border-bottom: 1px solid var(--line); background: rgba(243, 235, 221, 0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .navbar--night { border-color: var(--line-light); background: rgba(29, 23, 20, 0.88); }
+  .navbar-inner { display: flex; align-items: center; justify-content: space-between; width: min(100% - 96px, var(--max-width)); height: 100%; margin: 0 auto; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-family: var(--font-heading); font-size: 1.2rem; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; }
+  .navbar--night .logo { color: var(--paper-white); }
+  .logo:hover { color: var(--lacquer); }
+  .logo-badge { width: 28px; height: 28px; }
+  .nav-links { display: flex; align-items: stretch; gap: clamp(10px, 2.5vw, 34px); height: 100%; list-style: none; }
+  .nav-links a { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 100%; color: rgba(33, 27, 24, 0.66); font-size: 0.9rem; white-space: nowrap; }
+  .navbar--night .nav-links a { color: rgba(251, 248, 241, 0.64); }
+  .nav-links a::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--lacquer); transform: scaleX(0); transform-origin: right; transition: transform 180ms ease; }
+  .nav-links a:hover, .nav-links a.active { color: var(--ink); }
+  .navbar--night .nav-links a:hover, .navbar--night .nav-links a.active { color: var(--paper-white); }
+  .nav-links a.active::after, .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+  .nav-number { color: var(--lacquer); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0; }
+  @media (max-width: 900px) { .navbar-inner { width: min(100% - 64px, var(--max-width)); } .nav-links { gap: 16px; } }
+  @media (max-width: 600px) { .navbar-inner { width: calc(100% - 40px); } .logo { gap: 7px; font-size: 1rem; } .logo-badge { width: 24px; height: 24px; } .nav-links { gap: 10px; } .nav-links a { gap: 4px; font-size: 0.76rem; } .nav-number { display: none; } }
+  @media (max-width: 360px) { .navbar-inner { width: calc(100% - 28px); } .logo { font-size: 0.88rem; } .nav-links { gap: 7px; } .nav-links a { font-size: 0.68rem; } }
 </style>
 
 <script>
   const navbar = document.querySelector('.navbar');
-  if (navbar) {
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 20);
-    });
-  }
+  const onScroll = () => navbar?.classList.toggle('scrolled', window.scrollY > 16);
+  window.addEventListener('scroll', onScroll, { passive: true });
 </script>

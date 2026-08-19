@@ -4,6 +4,7 @@ import { moments } from '../src/data/moments';
 describe('moments data', () => {
   it('is not empty', () => {
     expect(moments.length).toBeGreaterThan(0);
+    expect(moments).toHaveLength(35);
   });
 
   it('has unique ids and non-empty src for every entry', () => {
@@ -13,6 +14,10 @@ describe('moments data', () => {
       expect(ids.has(m.id)).toBe(false);
       ids.add(m.id);
       expect(m.src).toBeTruthy();
+      expect(m.title).toBeTruthy();
+      expect(m.description).toBeTruthy();
+      expect(m.date).toMatch(/^2026-\d{2}-\d{2}$/);
+      expect(m.location).toBeTruthy();
     }
     expect(ids.size).toBe(moments.length);
   });

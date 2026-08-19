@@ -7,14 +7,16 @@ import '../styles/global.css';
 export interface Props {
   title: string;
   description?: string;
+  theme?: 'paper' | 'night';
+  immersive?: boolean;
+  ogImage?: string;
 }
 
-const { title, description } = Astro.props;
-
+const { title, description, theme = 'paper', immersive = false, ogImage: ogImagePath } = Astro.props;
 const siteUrl = new URL(import.meta.env.BASE_URL, Astro.site).toString();
-const ogImage = siteUrl + 'images/team-photo.jpg';
+const ogImage = siteUrl + (ogImagePath || 'images/team-photo.jpg');
 const fullTitle = `${title} — 和音滇韵`;
-const metaDescription = description || '北京科技大学"酉良和音滇韵民族团结实践团" — 音乐支教成果展示';
+const metaDescription = description || '和音滇韵｜十四日音乐支教田野纪事';
 ---
 
 <!doctype html>
@@ -31,41 +33,17 @@ const metaDescription = description || '北京科技大学"酉良和音滇韵民
     <meta property="og:description" content={metaDescription} />
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body class:list={[theme === 'night' && 'theme-night', immersive && 'layout-immersive']}>
     <a href="#main" class="skip-link">跳到主要内容</a>
-    <NavBar />
-    <main id="main">
-      <slot />
-    </main>
-    <Footer />
+    <NavBar theme={theme} />
+    <main id="main"><slot /></main>
+    {!immersive && <Footer theme={theme} />}
   </body>
 </html>
 
 <style is:global>
-  main {
-    min-height: calc(100vh - var(--nav-height) - 200px);
-    min-height: calc(100dvh - var(--nav-height) - 200px);
-    padding-top: var(--nav-height);
-  }
-
-  .skip-link {
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    padding: 10px 18px;
-    border-radius: var(--radius-sm);
-    background: var(--color-primary);
-    color: #fff;
-    font-size: 0.95rem;
-    z-index: 999;
-  }
-
-  .skip-link:focus-visible {
-    left: 12px;
-    top: 12px;
-  }
+  main { min-height: calc(100vh - var(--nav-height)); min-height: calc(100dvh - var(--nav-height)); }
+  .skip-link { position: fixed; left: 16px; top: -60px; z-index: 999; padding: 8px 14px; background: var(--lacquer); color: var(--paper-white); transition: top 180ms ease; }
+  .skip-link:focus-visible { top: 16px; }
 </style>

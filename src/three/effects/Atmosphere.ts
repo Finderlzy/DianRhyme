@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 
-const GLOW_COLOR = 0xffaa66;
-const AMBIENT_COLOR = 0xffe0c0;
-const AMBIENT_INTENSITY = 0.4;
+const GLOW_COLOR = 0x8c332d;
+const AMBIENT_COLOR = 0x8f786c;
+const AMBIENT_INTENSITY = 0.18;
 
 export class Atmosphere {
   static addGlow(scene: THREE.Scene): void {
-    const pointLight = new THREE.PointLight(GLOW_COLOR, 1.2, 200);
+    const pointLight = new THREE.PointLight(GLOW_COLOR, 0.45, 200);
     pointLight.position.set(0, 0, 20);
     scene.add(pointLight);
 

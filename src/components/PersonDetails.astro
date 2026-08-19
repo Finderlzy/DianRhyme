@@ -1,0 +1,15 @@
+---
+export interface Props {
+  person: { name: string; role: string; image: string; summary: string; bio: string };
+}
+const { person } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<details class="person">
+  <summary>
+    <img src={base + person.image} alt={person.name} width="600" height="800" loading="lazy" />
+    <span class="person-text"><strong>{person.name}</strong><span>{person.role}</span><small>{person.summary}</small><i aria-hidden="true">+</i></span>
+  </summary>
+  <p>{person.bio}</p>
+</details>

@@ -3,319 +3,154 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { moments } from '../data/moments';
 ---
 
-<BaseLayout title="精彩瞬间" description="探索我们的滇行记忆">
-  <div id="universe-canvas" class="universe-canvas"></div>
-  <div class="atmosphere" aria-hidden="true"></div>
-
-  {moments.length === 0 ? (
-    <div class="empty-state">
-      <p class="empty-state-title">这里还没有照片</p>
-      <p class="empty-state-desc">精彩瞬间正在整理中，先回首页看看吧。</p>
-      <a class="empty-state-link" href={import.meta.env.BASE_URL}>返回首页</a>
+<BaseLayout title="影像档案" description="和音滇韵｜进入十四日的回声" theme="night" ogImage="images/moments/moment-12.jpg">
+  <section class="moments-page">
+    <div class="moments-heading">
+      <p class="eyebrow">IMAGE ARCHIVE / 35 FRAGMENTS</p>
+      <h1>进入十四日的<br /><em>回声</em></h1>
+      <p>真实照片、日期、地点与故事，按一次次相遇重新排列。</p>
+      <div class="mode-switch" role="group" aria-label="影像浏览模式">
+        <button type="button" data-mode="star" aria-pressed="false">01 / 星图</button>
+        <button type="button" data-mode="gallery" aria-pressed="true">02 / 图册</button>
+      </div>
+      <p class="mode-hint">拖动探索 · 滚轮远近 · 点击照片查看故事</p>
     </div>
-  ) : (
-    <>
-      <div id="guide" class="guide">探索我们的滇行记忆</div>
 
-      <figure id="caption" class="caption is-hidden" aria-live="polite">
-        <div class="caption-rule" aria-hidden="true"></div>
-        <figcaption class="caption-title" id="caption-title"></figcaption>
-        <p class="caption-meta" id="caption-meta"></p>
-        <p class="caption-desc" id="caption-desc"></p>
-      </figure>
+    <section class="gallery-view" aria-label="影像图册">
+      <div class="gallery-grid">
+        {moments.map((moment, index) => (
+          <details class="gallery-item" data-gallery-item>
+            <summary>
+              <img src={moment.src} alt={moment.title || '现场影像'} loading={index < 3 ? 'eager' : 'lazy'} decoding="async" />
+              <span class="gallery-caption"><time datetime={moment.date}>{moment.date?.replaceAll('-', '.')}</time><strong>{moment.title}</strong><small>{moment.location}</small></span>
+            </summary>
+            <div class="gallery-story"><p>{moment.description || '这段影像的现场故事待补充。'}</p></div>
+          </details>
+        ))}
+      </div>
+    </section>
 
-      <p id="hint" class="hint is-hidden">拖动旋转 · 滚轮缩放 · 点击查看</p>
-      <button id="back-btn" class="back-btn is-hidden" type="button">返回探索</button>
-      <p id="loading" class="loading is-hidden" aria-hidden="true">正在点亮记忆…</p>
-    </>
-  )}
+    <section class="star-view" aria-label="影像星图">
+      <div id="universe-canvas"></div>
+      <div class="star-guide" id="guide"><span>星图正在展开</span></div>
+      <aside id="caption" class="caption is-hidden" aria-live="polite">
+        <p class="caption-kicker">CURRENT MEMORY</p><h2 class="caption-title" id="caption-title"></h2><p class="caption-meta" id="caption-meta"></p><p class="caption-desc" id="caption-desc"></p>
+      </aside>
+      <p id="hint" class="hint">拖动旋转 · 滚轮缩放 · 点击照片查看故事</p>
+      <button id="back-btn" class="back-btn is-hidden" type="button">返回星图 <span aria-hidden="true">↗</span></button>
+      <p id="loading" class="loading is-hidden" aria-live="polite">正在点亮影像…</p>
+      <div class="star-fallback"><p>星图暂时无法加载。</p><button type="button" data-mode="gallery">返回图册</button></div>
+    </section>
+  </section>
 </BaseLayout>
 
 <script>
+  import { chooseMomentsMode } from '../data/moments-mode';
+
+  const page = document.querySelector('.moments-page');
   const container = document.getElementById('universe-canvas');
   const guide = document.getElementById('guide');
   const caption = document.getElementById('caption');
   const hint = document.getElementById('hint');
-  const backBtn = document.getElementById('back-btn');
+  const backButton = document.getElementById('back-btn');
   const loading = document.getElementById('loading');
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-mode]')];
+  let activeMode = 'gallery';
+  let universeHandle: { dispose: () => void } | null = null;
+  let loadingStar = false;
 
-  let dispose = () => {};
-  document.addEventListener('astro:before-swap', () => dispose(), { once: true });
+  const setPressed = (mode: string) => {
+    buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
+  };
 
-  (async () => {
-    if (!container) return;
-    const { initUniverse } = await import('../three/main');
-    if (!container.isConnected) return; // 加载期间已切走
-    const handle = initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton: backBtn, loadingElement: loading });
-    dispose = handle.dispose;
-  })();
+  const disposeUniverse = () => {
+    universeHandle?.dispose();
+    universeHandle = null;
+    if (container) {
+      container.replaceChildren();
+      container.removeAttribute('data-universe-inited');
+    }
+  };
+
+  const loadStarMap = async () => {
+    if (!container || universeHandle || loadingStar) return;
+    loadingStar = true;
+    try {
+      const { initUniverse } = await import('../three/main');
+      if (!container.isConnected || activeMode !== 'star') return;
+      universeHandle = initUniverse(container, { guideElement: guide, captionElement: caption, hintElement: hint, backButton, loadingElement: loading });
+    } catch {
+      page?.classList.add('has-star-error');
+    } finally {
+      loadingStar = false;
+    }
+  };
+
+  const setMode = (mode: 'star' | 'gallery') => {
+    activeMode = mode;
+    page?.classList.toggle('is-star', mode === 'star');
+    page?.classList.toggle('is-gallery', mode === 'gallery');
+    setPressed(mode);
+    if (mode === 'star') void loadStarMap();
+    else disposeUniverse();
+  };
+
+  buttons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.mode === 'star' ? 'star' : 'gallery')));
+
+  const savedChoice = window.localStorage.getItem('moments-mode');
+  const initialMode = chooseMomentsMode({
+    width: window.innerWidth,
+    coarsePointer: window.matchMedia('(pointer: coarse)').matches,
+    userChoice: savedChoice === 'star' || savedChoice === 'gallery' ? savedChoice : null,
+  });
+  buttons.forEach((button) => button.addEventListener('click', () => window.localStorage.setItem('moments-mode', activeMode)));
+  setMode(initialMode);
 </script>
 
-<style is:global>
-  #universe-canvas {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  }
-
-  /* 暗色页上噪点遮罩几乎不可见,隐藏以省每帧合成开销 */
-  body::before {
-    display: none;
-  }
-
-  body {
-    overflow: hidden;
-    background: #35291e;
-  }
-
-  /* 暖光中心 + 暗角,强化"记忆相册"的沉浸氛围 */
-  .atmosphere {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse 72% 68% at 50% 46%,
-      rgba(255, 170, 102, 0.12) 0%,
-      rgba(255, 170, 102, 0) 48%,
-      rgba(53, 41, 30, 0.2) 100%
-    );
-  }
-
-  /* ===== 空态 ===== */
-  .empty-state {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 24px;
-    color: rgba(255, 233, 205, 0.92);
-    text-align: center;
-  }
-
-  .empty-state-title {
-    font-family: var(--font-heading);
-    font-size: 1.6rem;
-    letter-spacing: 0.12em;
-  }
-
-  .empty-state-desc {
-    font-size: 0.95rem;
-    color: rgba(255, 233, 205, 0.6);
-  }
-
-  .empty-state-link {
-    margin-top: 12px;
-    padding: 10px 26px;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    color: rgba(255, 235, 210, 0.92);
-    background: rgba(232, 146, 58, 0.35);
-    border: 1px solid rgba(232, 146, 58, 0.45);
-    transition: background 0.2s ease;
-  }
-
-  .empty-state-link:hover {
-    background: rgba(232, 146, 58, 0.55);
-  }
-
-  /* ===== 进场引导 ===== */
-  .guide {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 235, 210, 0.92);
-    font-family: var(--font-heading);
-    font-size: 2.2rem;
-    letter-spacing: 0.2em;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
-    pointer-events: none;
-    transition: opacity 0.5s ease-out;
-    animation: guide-in 0.9s ease-out backwards;
-  }
-
-  .guide.is-hidden {
-    opacity: 0;
-  }
-
-  @keyframes guide-in {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* ===== 照片说明卡(聚焦查看时的"记忆标签") ===== */
-  .caption {
-    position: fixed;
-    left: 24px;
-    bottom: 28px;
-    z-index: 40;
-    max-width: 340px;
-    margin: 0;
-    padding: 16px 20px 18px;
-    background: rgba(43, 32, 24, 0.82);
-    border: 1px solid rgba(232, 146, 58, 0.22);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-    color: #ffe9cd;
-    transition: opacity 0.35s ease-out, transform 0.35s ease-out;
-  }
-
-  .caption.is-hidden {
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-  }
-
-  .caption-rule {
-    width: 32px;
-    height: 2px;
-    margin-bottom: 12px;
-    background: var(--color-primary);
-  }
-
-  .caption-title {
-    font-family: var(--font-heading);
-    font-size: 1.35rem;
-    font-weight: 600;
-    line-height: 1.4;
-    color: #ffe9cd;
-    margin-bottom: 8px;
-  }
-
-  .caption-meta {
-    font-size: 0.8rem;
-    letter-spacing: 0.12em;
-    color: rgba(255, 233, 205, 0.58);
-    margin-bottom: 10px;
-  }
-
-  .caption-desc {
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: rgba(255, 233, 205, 0.8);
-  }
-
-  /* ===== 交互提示 / 返回按钮(右下角交替) ===== */
-  .hint {
-    position: fixed;
-    right: 24px;
-    bottom: 36px;
-    z-index: 40;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-    color: rgba(255, 233, 205, 0.5);
-    transition: opacity 0.35s ease-out;
-  }
-
-  .hint.is-hidden {
-    opacity: 0;
-  }
-
-  .back-btn {
-    position: fixed;
-    right: 24px;
-    bottom: 28px;
-    z-index: 40;
-    padding: 10px 22px;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    color: rgba(255, 235, 210, 0.92);
-    background: rgba(43, 32, 24, 0.68);
-    border: 1px solid rgba(232, 146, 58, 0.35);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    transition: opacity 0.3s ease, background 0.2s ease;
-  }
-
-  .back-btn:hover {
-    background: rgba(232, 146, 58, 0.35);
-  }
-
-  .back-btn:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .back-btn.is-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* ===== 加载指示 ===== */
-  .loading {
-    position: fixed;
-    left: 50%;
-    bottom: 36px;
-    transform: translateX(-50%);
-    z-index: 40;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    color: rgba(255, 233, 205, 0.55);
-    transition: opacity 0.35s ease-out;
-  }
-
-  .loading.is-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  @media (max-width: 600px) {
-    .guide {
-      font-size: 1.6rem;
-      letter-spacing: 0.16em;
-    }
-
-    .caption {
-      left: 16px;
-      bottom: 16px;
-      max-width: calc(100vw - 32px);
-      padding: 14px 16px 16px;
-      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    }
-
-    .hint {
-      right: 16px;
-      bottom: 20px;
-      font-size: 0.72rem;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    /* 小屏下返回按钮移到右上角,避免与左下说明卡重叠 */
-    .back-btn {
-      right: 16px;
-      top: calc(12px + env(safe-area-inset-top, 0px));
-      bottom: auto;
-      padding: 8px 16px;
-    }
-
-    .loading {
-      bottom: 20px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .guide,
-    .caption,
-    .hint,
-    .back-btn,
-    .loading {
-      transition: none;
-      animation: none;
-    }
-  }
+<style>
+  .moments-page { min-height: calc(100vh - var(--nav-height)); padding: 138px 0 0; background: var(--night); color: var(--paper-white); }
+  .moments-heading { display: grid; grid-template-columns: 1fr minmax(300px, 0.7fr); align-items: end; gap: 30px 80px; width: min(100% - 96px, var(--max-width)); margin: 0 auto; padding-bottom: 72px; }
+  .moments-heading .eyebrow { grid-column: 1 / -1; color: var(--bamboo); }
+  .moments-heading h1 { grid-column: 1; color: var(--paper-white); font-size: clamp(3.6rem, 8vw, 8rem); letter-spacing: -0.08em; line-height: 0.95; }
+  .moments-heading h1 em { color: var(--lacquer); font-style: normal; }
+  .moments-heading > p:not(.eyebrow):not(.mode-hint) { max-width: 380px; color: rgba(251, 248, 241, 0.66); font-family: var(--font-heading); font-size: 1.15rem; line-height: 1.8; }
+  .mode-switch { display: flex; gap: 20px; grid-column: 2; grid-row: 2; justify-self: end; }
+  .mode-switch button { padding: 0 0 8px; border-bottom: 1px solid transparent; color: rgba(251, 248, 241, 0.48); font-family: var(--font-mono); font-size: 0.72rem; }
+  .mode-switch button[aria-pressed="true"] { border-color: var(--lacquer); color: var(--paper-white); }
+  .mode-hint { grid-column: 2; justify-self: end; color: rgba(251, 248, 241, 0.42); font-family: var(--font-mono); font-size: 0.68rem; }
+  .gallery-view { display: block; width: min(100% - 96px, var(--max-width)); margin: 0 auto; padding-bottom: 130px; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 48px 24px; }
+  .gallery-item { grid-column: span 4; border-top: 1px solid var(--line-light); }
+  .gallery-item:nth-child(3n + 2) { margin-top: 80px; }
+  .gallery-item summary { display: block; list-style: none; cursor: pointer; }
+  .gallery-item summary::-webkit-details-marker { display: none; }
+  .gallery-item img { width: 100%; height: auto; max-height: 480px; object-fit: cover; filter: saturate(0.84); }
+  .gallery-caption { display: block; padding: 14px 0 0; }
+  .gallery-caption time, .gallery-caption strong, .gallery-caption small { display: block; }
+  .gallery-caption time { color: var(--bamboo); font-family: var(--font-mono); font-size: 0.68rem; }
+  .gallery-caption strong { margin-top: 7px; color: var(--paper-white); font-family: var(--font-heading); font-size: 1.15rem; font-weight: 500; }
+  .gallery-caption small { margin-top: 4px; color: rgba(251, 248, 241, 0.48); font-size: 0.75rem; }
+  .gallery-story { padding: 16px 0 8px; color: rgba(251, 248, 241, 0.68); font-size: 0.88rem; line-height: 1.85; }
+  .star-view { position: relative; display: none; min-height: calc(100vh - var(--nav-height)); overflow: hidden; }
+  .is-star .gallery-view { display: none; }
+  .is-star .star-view { display: block; }
+  #universe-canvas { position: absolute; inset: 0; }
+  .star-guide { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; color: rgba(251, 248, 241, 0.8); font-family: var(--font-heading); font-size: 2rem; pointer-events: none; transition: opacity 500ms ease; }
+  .star-guide.is-hidden { opacity: 0; }
+  .caption { position: absolute; right: 28px; bottom: 28px; z-index: 6; width: min(390px, calc(100% - 56px)); padding: 22px; border-left: 2px solid var(--lacquer); background: rgba(29, 23, 20, 0.86); color: var(--paper-white); backdrop-filter: blur(12px); }
+  .caption.is-hidden { opacity: 0; pointer-events: none; transform: translateY(10px); }
+  .caption-kicker { color: var(--bamboo); font-family: var(--font-mono); font-size: 0.68rem; }
+  .caption-title { margin: 10px 0; color: var(--paper-white); font-size: 1.5rem; }
+  .caption-meta { color: rgba(251, 248, 241, 0.55); font-family: var(--font-mono); font-size: 0.72rem; }
+  .caption-desc { margin-top: 14px; color: rgba(251, 248, 241, 0.76); font-size: 0.9rem; line-height: 1.8; }
+  .hint, .loading { position: absolute; right: 28px; top: 28px; z-index: 6; color: rgba(251, 248, 241, 0.48); font-family: var(--font-mono); font-size: 0.68rem; }
+  .loading { top: auto; right: auto; bottom: 28px; left: 28px; color: var(--bamboo); }
+  .is-hidden { opacity: 0; pointer-events: none; }
+  .back-btn { position: absolute; left: 28px; bottom: 28px; z-index: 6; color: var(--paper-white); font-family: var(--font-mono); font-size: 0.72rem; }
+  .back-btn span { color: var(--lacquer); }
+  .star-fallback { display: none; }
+  .has-star-error .star-fallback { position: absolute; inset: 0; z-index: 7; display: grid; place-content: center; gap: 14px; background: var(--night); color: var(--paper-white); text-align: center; }
+  .star-fallback button { color: var(--paper-white); text-decoration: underline; text-underline-offset: 4px; }
+  @media (max-width: 900px) { .moments-heading, .gallery-view { width: min(100% - 64px, var(--max-width)); } .gallery-grid { gap: 36px 18px; } .gallery-item { grid-column: span 6; } .gallery-item:nth-child(3n + 2) { margin-top: 0; } .gallery-item:nth-child(4n + 2) { margin-top: 60px; } }
+  @media (max-width: 600px) { .moments-page { padding-top: 120px; } .moments-heading, .gallery-view { width: calc(100% - 40px); } .moments-heading { display: block; padding-bottom: 52px; } .moments-heading h1 { font-size: clamp(3.5rem, 18vw, 5.6rem); } .moments-heading > p:not(.eyebrow):not(.mode-hint) { margin-top: 24px; font-size: 1.05rem; } .mode-switch { margin-top: 30px; justify-content: flex-start; } .mode-hint { margin-top: 14px; } .gallery-grid { display: block; } .gallery-item, .gallery-item:nth-child(4n + 2) { margin: 0 0 50px; } .gallery-item img { max-height: none; } .gallery-story { padding-bottom: 0; } .star-view { min-height: calc(100vh - var(--nav-height)); } .caption { right: 20px; bottom: 20px; left: 20px; width: auto; } .hint { top: 20px; right: 20px; } }
 </style>

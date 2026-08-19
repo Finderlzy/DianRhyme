@@ -3,109 +3,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<BaseLayout title="页面未找到" description="页面不存在或已被移动，返回和音滇韵首页">
-  <section class="nf">
-    <p class="nf-symbol" aria-hidden="true">♪</p>
-    <p class="nf-code">404</p>
-    <h1 class="nf-title">页面走丢了</h1>
-    <p class="nf-desc">你访问的地址不存在，可能已被移动或删除。回到首页，继续聆听这段滇韵和声。</p>
-    <div class="nf-actions">
-      <a class="nf-btn nf-btn--primary" href={base}>返回首页</a>
-      <a class="nf-btn" href={base + 'diary'}>实践过程记录</a>
+<BaseLayout title="未记录的声音" description="这一段声音没有被记录。">
+  <section class="not-found">
+    <div class="not-found-inner">
+      <p class="eyebrow">404 / UNRECORDED</p>
+      <svg class="broken-wave" viewBox="0 0 620 110" aria-hidden="true"><path d="M2 55 H125 C143 55 145 15 165 15 C186 15 186 94 208 94 C230 94 231 55 250 55 H308 C326 55 329 31 349 31 C370 31 372 79 391 79 C411 79 412 55 430 55 H618" /></svg>
+      <h1>这一段声音<br /><em>没有被记录。</em></h1>
+      <p class="not-found-copy">你来到了一页暂时不存在的记忆。</p>
+      <nav class="return-links" aria-label="返回方向">
+        <a href={base}><span>01</span>回到首页 <b aria-hidden="true">→</b></a>
+        <a href={base + 'diary'}><span>02</span>进入十四日纪事 <b aria-hidden="true">→</b></a>
+        <a href={base + 'moments'}><span>03</span>进入影像档案 <b aria-hidden="true">→</b></a>
+      </nav>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .nf {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - var(--nav-height) - 120px);
-    min-height: calc(100dvh - var(--nav-height) - 120px);
-    text-align: center;
-    padding: 40px 24px;
-  }
-
-  .nf-symbol {
-    font-size: 3rem;
-    line-height: 1;
-    color: var(--color-primary);
-    margin-bottom: 16px;
-    animation: nf-float 3s ease-in-out infinite;
-  }
-
-  .nf-code {
-    font-family: var(--font-heading);
-    font-size: 5.5rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--color-text);
-    letter-spacing: 0.04em;
-  }
-
-  .nf-title {
-    font-size: 1.6rem;
-    color: var(--color-text);
-    margin: 20px 0 12px;
-  }
-
-  .nf-desc {
-    max-width: 440px;
-    color: var(--color-text-light);
-    line-height: 1.8;
-    margin-bottom: 32px;
-  }
-
-  .nf-actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .nf-btn {
-    padding: 11px 28px;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-light);
-    transition: all 0.2s ease;
-  }
-
-  .nf-btn:hover {
-    color: var(--color-primary-dark);
-    border-color: var(--color-primary-light);
-    background: rgba(232, 146, 58, 0.06);
-  }
-
-  .nf-btn--primary {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
-  }
-
-  .nf-btn--primary:hover {
-    background: var(--color-primary-dark);
-    border-color: var(--color-primary-dark);
-    color: #fff;
-  }
-
-  @keyframes nf-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nf-symbol {
-      animation: none;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .nf-code {
-      font-size: 4rem;
-    }
-  }
+  .not-found { display: grid; min-height: calc(100vh - var(--nav-height)); place-items: center; padding: 120px 20px 80px; }
+  .not-found-inner { width: min(100%, 860px); }
+  .broken-wave { width: min(100%, 620px); height: auto; margin: 0 0 48px; overflow: visible; }
+  .broken-wave path { fill: none; stroke: var(--lacquer); stroke-width: 1.5; stroke-dasharray: 760; stroke-dashoffset: 760; animation: repair 1.1s 0.2s ease-out forwards; }
+  .not-found h1 { font-size: clamp(3.4rem, 9vw, 8rem); letter-spacing: -0.09em; line-height: 0.95; }
+  .not-found h1 em { color: var(--lacquer); font-style: normal; }
+  .not-found-copy { margin-top: 28px; color: var(--mist); font-family: var(--font-heading); font-size: 1.2rem; }
+  .return-links { display: grid; gap: 0; width: min(100%, 600px); margin-top: 64px; border-top: 1px solid var(--line); }
+  .return-links a { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--line); color: var(--ink); }
+  .return-links a:hover { color: var(--lacquer); }
+  .return-links span { color: var(--lacquer); font-family: var(--font-mono); font-size: 0.7rem; }
+  .return-links b { color: var(--lacquer); font-size: 1.25rem; font-weight: 400; transition: transform 180ms ease; }
+  .return-links a:hover b { transform: translateX(5px); }
+  @keyframes repair { to { stroke-dashoffset: 0; } }
+  @media (max-width: 600px) { .not-found { place-items: start; padding-top: 140px; } .broken-wave { margin-bottom: 42px; } .not-found h1 { font-size: 3.5rem; } .return-links { margin-top: 48px; } }
 </style>
