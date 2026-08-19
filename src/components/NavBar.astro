@@ -1,4 +1,7 @@
 ---
+import ResponsiveImage from './ResponsiveImage.astro';
+import { getResponsiveImage } from '../lib/images';
+
 export interface Props { theme?: 'paper' | 'night'; }
 const { theme = 'paper' } = Astro.props;
 const base = import.meta.env.BASE_URL;
@@ -14,7 +17,7 @@ const links = [
   <div class="navbar-inner">
     <a href={base} class="logo" aria-label="和音滇韵首页">
       <span class="logo-text">和音滇韵</span>
-      <span class="logo-badge"><img src={base + 'images/logo.jpg'} alt="" /></span>
+      <span class="logo-badge"><ResponsiveImage image={getResponsiveImage('images/logo.jpg')} alt="" sizes="40px" loading="eager" /></span>
     </a>
     <ul class="nav-links">
       {links.map((link) => {

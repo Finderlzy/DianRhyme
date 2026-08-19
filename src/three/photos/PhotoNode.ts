@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { easeOutBack, randomInRange } from '../utils/MathUtils';
 import type { Moment } from '../../data/moments';
 import type { LayoutPoint } from './LayoutGenerator';
+import type { ProgressiveTextureLoader } from '../utils/LoadScaledTexture';
 
 const PLACEHOLDER_COLOR = 0x6b5b4e;
 const FLOAT_AMPLITUDE = 0.3;
@@ -22,6 +23,7 @@ export type StagedTextureLoaderFn = (src: string) => StagedTextureSource;
 export interface PhotoNodeOptions {
   textureLoader?: TextureLoaderFn;
   stagedTextureLoader?: StagedTextureLoaderFn;
+  progressiveTextureLoader?: ProgressiveTextureLoader;
   onReady?: (node: PhotoNode) => void;
   reducedMotion?: boolean;
 }
@@ -48,6 +50,9 @@ export class PhotoNode {
   private introStartedAt: number | null = null;
   private thumbnailTexture: THREE.Texture | null = null;
   private fullApplied = false;
+  private fullLoader: (() => Promise<THREE.Texture>) | null = null;
+  private fullPromise: Promise<void> | null = null;
+  private disposed = false;
 
   constructor(moment: Moment, position: LayoutPoint, options: PhotoNodeOptions = {}) {
     this.id = moment.id;
@@ -67,7 +72,8 @@ export class PhotoNode {
     // D012: 远处保持随机角度
     this.mesh.rotation.y = randomInRange(0, Math.PI * 2);
 
-    this.loadTexture(moment.src, material, options);
+    if (options.progressiveTextureLoader) this.loadProgressive(moment, material, options.progressiveTextureLoader);
+    else this.loadTexture(moment.src, material, options);
   }
 
   update(_deltaTime: number, elapsedTime: number): void {
@@ -102,7 +108,28 @@ export class PhotoNode {
     this.beginIntro();
   }
 
+  loadFull(): Promise<void> {
+    if (!this.fullLoader) return Promise.resolve();
+    if (this.fullPromise) return this.fullPromise;
+    const loader = this.fullLoader;
+    let fullTexture: Promise<THREE.Texture>;
+    try {
+      fullTexture = loader();
+    } catch {
+      this.fullPromise = Promise.resolve();
+      return this.fullPromise;
+    }
+    this.fullPromise = fullTexture.then((texture) => {
+        if (this.disposed) texture.dispose();
+        else this.applyFull(texture, this.mesh.material as THREE.MeshBasicMaterial);
+      }, () => {
+        // 高清失败时保留已经显示的缩略图。
+      });
+    return this.fullPromise;
+  }
+
   dispose(): void {
+    this.disposed = true;
     this.mesh.geometry.dispose();
     const material = this.mesh.material;
     if (material instanceof THREE.Material) material.dispose();
@@ -156,8 +183,23 @@ export class PhotoNode {
     );
   }
 
+  private loadProgressive(moment: Moment, material: THREE.MeshBasicMaterial, loader: ProgressiveTextureLoader): void {
+    let progressive: ReturnType<ProgressiveTextureLoader>;
+    try {
+      progressive = loader({ thumbnail: moment.thumbnailSrc, full: moment.src });
+    } catch {
+      this.setPlaceholder(material, true);
+      return;
+    }
+    this.fullLoader = progressive.full;
+    progressive.thumbnail.then(
+      (texture) => this.applyThumbnail(texture, material),
+      () => this.setPlaceholder(material, false),
+    );
+  }
+
   private applyThumbnail(texture: THREE.Texture, material: THREE.MeshBasicMaterial): void {
-    if (this.fullApplied) {
+    if (this.disposed || this.fullApplied) {
       texture.dispose();
       return;
     }
@@ -175,6 +217,10 @@ export class PhotoNode {
   }
 
   private applyFull(texture: THREE.Texture, material: THREE.MeshBasicMaterial): void {
+    if (this.disposed) {
+      texture.dispose();
+      return;
+    }
     this.fullApplied = true;
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearMipmapLinearFilter;

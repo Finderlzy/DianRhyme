@@ -2,6 +2,7 @@
 import { ViewTransitions } from 'astro:transitions';
 import NavBar from '../components/NavBar.astro';
 import Footer from '../components/Footer.astro';
+import { getLegacyImageUrl } from '../lib/images';
 import '../styles/global.css';
 
 export interface Props {
@@ -14,7 +15,8 @@ export interface Props {
 
 const { title, description, theme = 'paper', immersive = false, ogImage: ogImagePath } = Astro.props;
 const siteUrl = new URL(import.meta.env.BASE_URL, Astro.site).toString();
-const ogImage = siteUrl + (ogImagePath || 'images/team-photo.jpg');
+const ogImage = new URL(getLegacyImageUrl(ogImagePath || 'images/team-photo.jpg'), siteUrl).toString();
+const favicon = `${import.meta.env.BASE_URL}images/logo-favicon.png`;
 const fullTitle = `${title} — 和音滇韵`;
 const metaDescription = description || '和音滇韵｜十四日音乐支教田野纪事';
 ---
@@ -27,7 +29,7 @@ const metaDescription = description || '和音滇韵｜十四日音乐支教田�
     <ViewTransitions />
     <meta name="description" content={metaDescription} />
     <title>{fullTitle}</title>
-    <link rel="icon" type="image/jpeg" href={import.meta.env.BASE_URL + 'images/logo.jpg'} />
+    <link rel="icon" type="image/png" href={favicon} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={metaDescription} />

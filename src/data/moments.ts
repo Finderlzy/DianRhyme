@@ -1,6 +1,12 @@
+import { getResponsiveImage } from '../lib/images';
+
 export interface Moment {
   id: string;
   src: string;
+  thumbnailSrc: string;
+  srcSet: string;
+  width: number;
+  height: number;
   title?: string;
   description?: string;
   date?: string;
@@ -9,7 +15,7 @@ export interface Moment {
 
 const base = import.meta.env.BASE_URL;
 
-export const moments: Moment[] = [
+const rawMoments: Array<Omit<Moment, 'src' | 'thumbnailSrc' | 'srcSet' | 'width' | 'height'> & { src: string }> = [
   {
     id: 'team-photo',
     src: `${base}images/team-photo.jpg`,
@@ -291,3 +297,8 @@ export const moments: Moment[] = [
     location: '澜沧县特殊教育学校',
   },
 ];
+
+export const moments: Moment[] = rawMoments.map((moment) => ({
+  ...moment,
+  ...getResponsiveImage(moment.src),
+}));

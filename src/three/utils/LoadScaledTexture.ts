@@ -255,6 +255,102 @@ export interface StagedTexture {
   full: THREE.Texture;
 }
 
+export interface ProgressiveTextureSource {
+  thumbnail: string;
+  full: string;
+}
+
+export type ProgressiveTextureLoader = (source: ProgressiveTextureSource) => {
+  thumbnail: Promise<THREE.Texture>;
+  full: () => Promise<THREE.Texture>;
+};
+
+export interface ProgressiveTextureLoaderOptions {
+  thumbnailConcurrency?: number;
+  fullConcurrency?: number;
+  loadTexture?: (url: string) => Promise<THREE.Texture>;
+}
+
+interface QueueTask<T> {
+  job: () => Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: unknown) => void;
+}
+
+class AsyncQueue {
+  private active = 0;
+  private readonly queue: Array<QueueTask<THREE.Texture>> = [];
+
+  constructor(private readonly concurrency: number) {}
+
+  enqueue(job: () => Promise<THREE.Texture>, priority = false): Promise<THREE.Texture> {
+    return new Promise<THREE.Texture>((resolve, reject) => {
+      const task = { job, resolve, reject };
+      if (priority) this.queue.unshift(task);
+      else this.queue.push(task);
+      this.pump();
+    });
+  }
+
+  clear(): void {
+    this.queue.length = 0;
+  }
+
+  private pump(): void {
+    while (this.active < this.concurrency && this.queue.length > 0) {
+      const task = this.queue.shift() as QueueTask<THREE.Texture>;
+      this.active += 1;
+      task.job().then(task.resolve, task.reject).finally(() => {
+        this.active -= 1;
+        this.pump();
+      });
+    }
+  }
+}
+
+function defaultProgressiveTextureLoader(url: string): Promise<THREE.Texture> {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.TextureLoader();
+    loader.load(url, resolve, undefined, reject);
+  });
+}
+
+export function createProgressiveTextureLoader(options: ProgressiveTextureLoaderOptions = {}): {
+  load: ProgressiveTextureLoader;
+  dispose: () => void;
+} {
+  const thumbnailQueue = new AsyncQueue(Math.max(1, options.thumbnailConcurrency ?? 6));
+  const fullQueue = new AsyncQueue(Math.max(1, options.fullConcurrency ?? 2));
+  const loadTexture = options.loadTexture ?? defaultProgressiveTextureLoader;
+  const cache = new Map<string, { thumbnail: Promise<THREE.Texture>; full?: Promise<THREE.Texture> }>();
+
+  const load: ProgressiveTextureLoader = (source) => {
+    const key = source.full;
+    const cached = cache.get(key);
+    if (cached) {
+      return { thumbnail: cached.thumbnail, full: () => cached.full ?? (cached.full = fullQueue.enqueue(() => loadTexture(source.full), true)) };
+    }
+
+    const entry: { thumbnail: Promise<THREE.Texture>; full?: Promise<THREE.Texture> } = {
+      thumbnail: thumbnailQueue.enqueue(() => loadTexture(source.thumbnail)),
+    };
+    cache.set(key, entry);
+    return {
+      thumbnail: entry.thumbnail,
+      full: () => entry.full ?? (entry.full = fullQueue.enqueue(() => loadTexture(source.full), true)),
+    };
+  };
+
+  return {
+    load,
+    dispose: () => {
+      thumbnailQueue.clear();
+      fullQueue.clear();
+      cache.clear();
+    },
+  };
+}
+
 export type StagedTextureLoader = (src: string) => {
   thumbnail: Promise<THREE.Texture>;
   full: Promise<THREE.Texture>;

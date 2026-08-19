@@ -4,18 +4,21 @@ import type { PhotoNode } from '../photos/PhotoNode';
 export interface PickEvent {
   clientX: number;
   clientY: number;
-  target?: unknown;
+  target?: { clientWidth?: number; clientHeight?: number; getBoundingClientRect?: () => { left: number; top: number } };
 }
 
 export class Raycaster {
   private readonly raycaster = new THREE.Raycaster();
 
   pick(event: PickEvent, camera: THREE.Camera, nodes: PhotoNode[]): PhotoNode | null {
-    const el = event.target as { clientWidth?: number; clientHeight?: number } | null | undefined;
+    const el = event.target;
     const width = el?.clientWidth || 1;
     const height = el?.clientHeight || 1;
+    const rect = el?.getBoundingClientRect?.() ?? { left: 0, top: 0 };
+    const localX = event.clientX - rect.left;
+    const localY = event.clientY - rect.top;
 
-    const ndc = new THREE.Vector2((event.clientX / width) * 2 - 1, -(event.clientY / height) * 2 + 1);
+    const ndc = new THREE.Vector2((localX / width) * 2 - 1, -(localY / height) * 2 + 1);
 
     camera.updateMatrixWorld();
     this.raycaster.setFromCamera(ndc, camera);

@@ -14,6 +14,10 @@ describe('moments data', () => {
       expect(ids.has(m.id)).toBe(false);
       ids.add(m.id);
       expect(m.src).toBeTruthy();
+      expect(m.thumbnailSrc).toContain('.480.webp');
+      expect(m.srcSet).toContain('1920w');
+      expect(m.width).toBeGreaterThan(0);
+      expect(m.height).toBeGreaterThan(0);
       expect(m.title).toBeTruthy();
       expect(m.description).toBeTruthy();
       expect(m.date).toMatch(/^2026-\d{2}-\d{2}$/);
@@ -26,7 +30,7 @@ describe('moments data', () => {
     const base = import.meta.env.BASE_URL;
     for (const m of moments) {
       expect(m.src.startsWith(base)).toBe(true);
-      expect(m.src.endsWith('.jpg') || m.src.endsWith('.png')).toBe(true);
+      expect(m.src.endsWith('.1920.webp')).toBe(true);
     }
   });
 });

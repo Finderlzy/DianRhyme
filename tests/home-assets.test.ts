@@ -22,7 +22,7 @@ describe('home page image assets', () => {
   });
 
   it('uses the team photo as the visible homepage hero image', () => {
-    expect(homeSource).toContain("<img src={base + 'images/team-photo.jpg'}");
+    expect(homeSource).toContain("getResponsiveImage('images/team-photo.jpg')");
   });
 
   it('keeps chapter one as an image slot until the expected file is supplied', () => {
@@ -34,7 +34,7 @@ describe('home page image assets', () => {
     for (const name of portraitNames) {
       const relativePath = `images/portraits/${name}.jpg`;
       expect(homeSource).toContain(relativePath);
-      expect(existsSync(join(projectRoot, 'public', relativePath))).toBe(true);
+      expect(existsSync(join(projectRoot, 'assets', 'images-original', relativePath.replace(/^images\//, '')))).toBe(true);
     }
   });
 });

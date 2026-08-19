@@ -11,11 +11,10 @@ import { Raycaster } from './interaction/Raycaster';
 import { PhotoManager } from './photos/PhotoManager';
 import type { PhotoNode } from './photos/PhotoNode';
 import { resolveTier } from './utils/DeviceTier';
-import { createStagedTextureLoader } from './utils/LoadScaledTexture';
+import { createProgressiveTextureLoader } from './utils/LoadScaledTexture';
 
 const MAX_DIRECT_LOAD = 30;
 const LOAD_CONCURRENCY = 6;
-const THUMB_EDGE = 256;
 const ENTERING_DURATION_MS = 2000;
 const LOADING_TIMEOUT_MS = 4000;
 
@@ -95,11 +94,9 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     if (readyCount >= total) hideLoading();
   };
 
-  // 两段式 loader:缩略图先点亮,全图后替换;同一时刻最多 6 张在途
-  const stagedTextureLoader = createStagedTextureLoader({
-    thumbEdge: THUMB_EDGE,
-    maxEdge: tier.maxTextureEdge,
-    concurrency: LOAD_CONCURRENCY,
+  const progressiveTextureLoader = createProgressiveTextureLoader({
+    thumbnailConcurrency: LOAD_CONCURRENCY,
+    fullConcurrency: 2,
   });
 
   const photoManager = new PhotoManager(sceneManager.scene, moments, {
@@ -108,7 +105,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     minDistance: 4,
     maxRetries: 50,
   }, {
-    stagedTextureLoader,
+    progressiveTextureLoader: progressiveTextureLoader.load,
     onReady: onNodeReady,
     reducedMotion: tier.reducedMotion,
   });
@@ -138,6 +135,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
       if (state === UniverseState.EXPLORING) {
         focusedNode = hit;
         focusController.focusOn(hit);
+        void hit.loadFull();
       }
     } else if (state === UniverseState.VIEWING) {
       focusController.returnToExplore();
@@ -207,6 +205,7 @@ export function initUniverse(container: HTMLElement, options: UniverseOptions = 
     backButton?.removeEventListener('click', onBackClick);
     controls.dispose();
     photoManager.nodes.forEach((node) => node.dispose());
+    progressiveTextureLoader.dispose();
     particles.geometry.dispose();
     (particles.material as THREE.Material).dispose();
     renderer.dispose();

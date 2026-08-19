@@ -3,10 +3,14 @@
   "type": "module",
   "version": "2.0.0",
   "scripts": {
+    "predev": "node scripts/generate-images.mjs",
     "dev": "astro dev",
+    "prestart": "node scripts/generate-images.mjs",
     "start": "astro dev",
+    "prebuild": "node scripts/generate-images.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "pretest": "node scripts/generate-images.mjs",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
@@ -15,6 +19,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.185.4",
+    "sharp": "^0.35.3",
     "vitest": "^4.1.10"
   }
 }

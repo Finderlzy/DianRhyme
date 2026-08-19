@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { moments } from '../data/moments';
+import ResponsiveImage from '../components/ResponsiveImage.astro';
 ---
 
 <BaseLayout title="影像档案" description="和音滇韵｜进入十四日的回声" theme="night" ogImage="images/moments/moment-12.jpg">
@@ -17,18 +18,35 @@ import { moments } from '../data/moments';
     </div>
 
     <section class="gallery-view" aria-label="影像图册">
+      <div id="gallery-mount"></div>
+    </section>
+
+    <template id="gallery-template">
       <div class="gallery-grid">
-        {moments.map((moment, index) => (
+        {moments.map((moment) => (
           <details class="gallery-item" data-gallery-item>
             <summary>
-              <img src={moment.src} alt={moment.title || '现场影像'} loading={index < 3 ? 'eager' : 'lazy'} decoding="async" />
+              <ResponsiveImage image={{ src: moment.src, thumbnailSrc: moment.thumbnailSrc, srcSet: moment.srcSet, width: moment.width, height: moment.height }} alt={moment.title || '现场影像'} sizes="(max-width: 600px) calc(100vw - 40px), (max-width: 900px) 48vw, 31vw" />
               <span class="gallery-caption"><time datetime={moment.date}>{moment.date?.replaceAll('-', '.')}</time><strong>{moment.title}</strong><small>{moment.location}</small></span>
             </summary>
             <div class="gallery-story"><p>{moment.description || '这段影像的现场故事待补充。'}</p></div>
           </details>
         ))}
       </div>
-    </section>
+    </template>
+
+    <noscript>
+      <section class="no-script-gallery" aria-label="影像图册">
+        <div class="gallery-grid">
+          {moments.map((moment) => (
+            <figure class="gallery-item">
+              <ResponsiveImage image={{ src: moment.src, thumbnailSrc: moment.thumbnailSrc, srcSet: moment.srcSet, width: moment.width, height: moment.height }} alt={moment.title || '现场影像'} sizes="(max-width: 600px) calc(100vw - 40px), (max-width: 900px) 48vw, 31vw" />
+              <figcaption class="gallery-caption"><time datetime={moment.date}>{moment.date?.replaceAll('-', '.')}</time><strong>{moment.title}</strong><small>{moment.location}</small><span class="gallery-story">{moment.description || '这段影像的现场故事待补充。'}</span></figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+    </noscript>
 
     <section class="star-view" aria-label="影像星图">
       <div id="universe-canvas"></div>
@@ -49,6 +67,8 @@ import { moments } from '../data/moments';
 
   const page = document.querySelector('.moments-page');
   const container = document.getElementById('universe-canvas');
+  const galleryMount = document.getElementById('gallery-mount');
+  const galleryTemplate = document.getElementById('gallery-template') as HTMLTemplateElement | null;
   const guide = document.getElementById('guide');
   const caption = document.getElementById('caption');
   const hint = document.getElementById('hint');
@@ -72,6 +92,14 @@ import { moments } from '../data/moments';
     }
   };
 
+  const mountGallery = () => {
+    if (galleryMount && galleryTemplate && galleryMount.childElementCount === 0) {
+      galleryMount.appendChild(galleryTemplate.content.cloneNode(true));
+    }
+  };
+
+  const unmountGallery = () => galleryMount?.replaceChildren();
+
   const loadStarMap = async () => {
     if (!container || universeHandle || loadingStar) return;
     loadingStar = true;
@@ -91,8 +119,13 @@ import { moments } from '../data/moments';
     page?.classList.toggle('is-star', mode === 'star');
     page?.classList.toggle('is-gallery', mode === 'gallery');
     setPressed(mode);
-    if (mode === 'star') void loadStarMap();
-    else disposeUniverse();
+    if (mode === 'star') {
+      unmountGallery();
+      void loadStarMap();
+    } else {
+      disposeUniverse();
+      mountGallery();
+    }
   };
 
   buttons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.mode === 'star' ? 'star' : 'gallery')));
@@ -119,6 +152,7 @@ import { moments } from '../data/moments';
   .mode-switch button[aria-pressed="true"] { border-color: var(--lacquer); color: var(--paper-white); }
   .mode-hint { grid-column: 2; justify-self: end; color: rgba(251, 248, 241, 0.42); font-family: var(--font-mono); font-size: 0.68rem; }
   .gallery-view { display: block; width: min(100% - 96px, var(--max-width)); margin: 0 auto; padding-bottom: 130px; }
+  .no-script-gallery { display: block; width: min(100% - 96px, var(--max-width)); margin: 0 auto; padding-bottom: 130px; }
   .gallery-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 48px 24px; }
   .gallery-item { grid-column: span 4; border-top: 1px solid var(--line-light); }
   .gallery-item:nth-child(3n + 2) { margin-top: 80px; }
@@ -151,6 +185,6 @@ import { moments } from '../data/moments';
   .star-fallback { display: none; }
   .has-star-error .star-fallback { position: absolute; inset: 0; z-index: 7; display: grid; place-content: center; gap: 14px; background: var(--night); color: var(--paper-white); text-align: center; }
   .star-fallback button { color: var(--paper-white); text-decoration: underline; text-underline-offset: 4px; }
-  @media (max-width: 900px) { .moments-heading, .gallery-view { width: min(100% - 64px, var(--max-width)); } .gallery-grid { gap: 36px 18px; } .gallery-item { grid-column: span 6; } .gallery-item:nth-child(3n + 2) { margin-top: 0; } .gallery-item:nth-child(4n + 2) { margin-top: 60px; } }
-  @media (max-width: 600px) { .moments-page { padding-top: 120px; } .moments-heading, .gallery-view { width: calc(100% - 40px); } .moments-heading { display: block; padding-bottom: 52px; } .moments-heading h1 { font-size: clamp(3.5rem, 18vw, 5.6rem); } .moments-heading > p:not(.eyebrow):not(.mode-hint) { margin-top: 24px; font-size: 1.05rem; } .mode-switch { margin-top: 30px; justify-content: flex-start; } .mode-hint { margin-top: 14px; } .gallery-grid { display: block; } .gallery-item, .gallery-item:nth-child(4n + 2) { margin: 0 0 50px; } .gallery-item img { max-height: none; } .gallery-story { padding-bottom: 0; } .star-view { min-height: calc(100vh - var(--nav-height)); } .caption { right: 20px; bottom: 20px; left: 20px; width: auto; } .hint { top: 20px; right: 20px; } }
+  @media (max-width: 900px) { .moments-heading, .gallery-view, .no-script-gallery { width: min(100% - 64px, var(--max-width)); } .gallery-grid { gap: 36px 18px; } .gallery-item { grid-column: span 6; } .gallery-item:nth-child(3n + 2) { margin-top: 0; } .gallery-item:nth-child(4n + 2) { margin-top: 60px; } }
+  @media (max-width: 600px) { .moments-page { padding-top: 120px; } .moments-heading, .gallery-view, .no-script-gallery { width: calc(100% - 40px); } .moments-heading { display: block; padding-bottom: 52px; } .moments-heading h1 { font-size: clamp(3.5rem, 18vw, 5.6rem); } .moments-heading > p:not(.eyebrow):not(.mode-hint) { margin-top: 24px; font-size: 1.05rem; } .mode-switch { margin-top: 30px; justify-content: flex-start; } .mode-hint { margin-top: 14px; } .gallery-grid { display: block; } .gallery-item, .gallery-item:nth-child(4n + 2) { margin: 0 0 50px; } .gallery-item img { max-height: none; } .gallery-story { padding-bottom: 0; } .star-view { min-height: calc(100vh - var(--nav-height)); } .caption { right: 20px; bottom: 20px; left: 20px; width: auto; } .hint { top: 20px; right: 20px; } }
 </style>

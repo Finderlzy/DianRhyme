@@ -56,4 +56,14 @@ describe('Raycaster.pick', () => {
     const camera = makeCamera();
     expect(new Raycaster().pick(centerEvent, camera, [])).toBeNull();
   });
+
+  it('accounts for the canvas viewport offset', () => {
+    const camera = makeCamera();
+    const hit = new Raycaster().pick({
+      clientX: 800,
+      clientY: 450,
+      target: { clientWidth: 800, clientHeight: 600, getBoundingClientRect: () => ({ left: 400, top: 150 }) },
+    }, camera, makeNodes('a', 'b'));
+    expect(hit?.id).toBe('a');
+  });
 });
