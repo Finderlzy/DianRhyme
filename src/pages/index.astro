@@ -204,10 +204,10 @@ const students = [
   .archive-entry .text-link { margin-top: 34px; color: var(--paper-white); }
   .archive-entry .section-kicker { color: var(--bamboo); }
   .archive-photos { position: relative; min-height: 390px; }
-  .archive-photos img { position: absolute; width: 44%; aspect-ratio: 3 / 4; object-fit: cover; border: 5px solid var(--night); }
-  .archive-photos img:nth-child(1) { top: 28px; left: 0; transform: rotate(-5deg); }
-  .archive-photos img:nth-child(2) { top: 0; right: 24%; transform: rotate(4deg); }
-  .archive-photos img:nth-child(3) { right: 0; bottom: 0; transform: rotate(-2deg); }
+  .archive-photos :global(img) { position: absolute; width: 44%; aspect-ratio: 3 / 4; object-fit: cover; border: 5px solid var(--night); }
+  .archive-photos :global(img:nth-child(1)) { top: 28px; left: 0; transform: rotate(-5deg); }
+  .archive-photos :global(img:nth-child(2)) { top: 0; right: 24%; transform: rotate(4deg); }
+  .archive-photos :global(img:nth-child(3)) { right: 0; bottom: 0; transform: rotate(-2deg); }
   .closing { padding: 90px 20px 0; text-align: center; }
   .closing p { font-family: var(--font-heading); font-size: clamp(1.7rem, 3vw, 2.8rem); }
   @keyframes draw-line { to { stroke-dashoffset: 0; } }
