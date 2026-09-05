@@ -6,7 +6,7 @@ import { getResponsiveImage, imageManifest } from '../src/lib/images';
 describe('generated image manifest', () => {
   it('contains every source image and generated dimensions', () => {
     const entries = Object.values(imageManifest);
-    expect(entries).toHaveLength(55);
+    expect(entries).toHaveLength(58);
     for (const entry of entries) {
       expect(entry.sourceHash).toMatch(/^[a-f0-9]{64}$/);
       expect(entry.width).toBeGreaterThan(0);
